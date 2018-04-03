@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Welcome to nUber!</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <style>body { padding: 2% 5% 5% 5%; } li { margin: .25%; } code { display: inline-block; margin: .5% }</style>
+</head>
+<body>
+  <h1>Welcome to nUber.</h1>
+  <p>Use this page as a reference to our service's REST API.</p>
+  <h3>GET Methods:</h3>
+  <code>http://OURPROJECTURL.COM/api/getRider/9a8b7c6d54</code>
+  <h4>Example Output:</h4>
+  <code>
+    {
+      "_id" : "9a8b7c6d54",
+      "name" : "Jim Jones",
+      "rating" : 4.8
+    }
+  </code>
+  <br>
+  <code>http://OURPROJECTURL.COM/api/getRating/rider/9a8b7c6d54</code>
+  <h4>Example Output:</h4>
+  <code>
+    {
+      "4.8"
+    }
+  </code>
+  <br>
+  
+  <code>http://OURPROJECTURL.COM/api/getDriver/1g2f1324s</code>
+  <h4>Example Output:</h4>
+  <code>
+    {
+      "_id" : "1g2f1324s",
+      "name" : "Jolly Roger",
+      "vehicle" : "Battle Bus",
+      "capacity" : 100,
+      "rating" : 4.6
+    }
+  </code>
+  <br>
+  <br>
+  <h3>POST Methods:</h3>
+  <code>http://OURPROJECTURL.COM/api/addDriver</code>
+  <h5>Sample POST Body:</h5>
+  <code>
+    {
+      "password" : "ADMIN_PASSWORD",
+      "name" : "Speed Racer",
+      "vehicle" : "Race Car",
+      "capacity" : "2"
+    }
+  </code>
+  </body>
+</html>
