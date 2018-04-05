@@ -12,8 +12,9 @@
   <h1>Welcome to nUber.</h1>
   <p>Use this page as a reference to our service's REST API.</p>
   <h3>GET Methods:</h3>
+  <h4>getRider:</h4>
   <code>http://OURPROJECTURL.COM/api/getRider/9a8b7c6d54</code>
-  <h4>Example Output:</h4>
+  <h5>Example Output:</h5>
   <code>
     {
       "_id" : "9a8b7c6d54",
@@ -22,17 +23,10 @@
     }
   </code>
   <br>
-  <code>http://OURPROJECTURL.COM/api/getRating/rider/9a8b7c6d54</code>
-  <h4>Example Output:</h4>
-  <code>
-    {
-      "4.8"
-    }
-  </code>
   <br>
-  
+  <h4>getDriver:</h4>
   <code>http://OURPROJECTURL.COM/api/getDriver/1g2f1324s</code>
-  <h4>Example Output:</h4>
+  <h5>Example Output:</h5>
   <code>
     {
       "_id" : "1g2f1324s",
@@ -44,7 +38,28 @@
   </code>
   <br>
   <br>
+  <h4>getRating:</h4>
+  <code>http://OURPROJECTURL.COM/api/getRating/rider/9a8b7c6d54</code>
+  <h5>Example Output:</h5>
+  <code>
+    {
+      "4.8"
+    }
+  </code>
+  <br>
+  <br>
+  <h4>getRating:</h4>
+  <code>http://OURPROJECTURL.COM/api/getRating/driver/9a8b7c6d54</code>
+  <h5>Example Output:</h5>
+  <code>
+    {
+      "4.6"
+    }
+  </code>
+  <br>
+  <br>
   <h3>POST Methods:</h3>
+  <h4>addDriver:</h4>
   <code>http://OURPROJECTURL.COM/api/addDriver</code>
   <h5>Sample POST Body:</h5>
   <code>
@@ -53,6 +68,36 @@
       "name" : "Speed Racer",
       "vehicle" : "Race Car",
       "capacity" : "2"
+    }
+  </code>
+  <br>
+  <br>
+  <h4>addRider:</h4>
+  <code>http://OURPROJECTURL.COM/api/addRider</code>
+  <h5>Sample POST Body:</h5>
+  <code>
+    {
+      "name" : "Speed Racer"
+    }
+  </code>
+  <br>
+  <br>
+  <h4>removeDriver:</h4>
+  <code>http://OURPROJECTURL.COM/api/removeDriver/34j43l229d</code>
+  <h5>Sample POST Body:</h5>
+  <code>
+    {
+      "password" : "ADMIN_PASSWORD"
+    }
+  </code>
+  <br>
+  <br>
+  <h4>removeRider:</h4>
+  <code>http://OURPROJECTURL.COM/api/removeRider/djn4j4j3225</code>
+  <h5>Sample POST Body:</h5>
+  <code>
+    {
+      "password" : "ADMIN_PASSWORD"
     }
   </code>
   </body>
