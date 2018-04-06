@@ -55,19 +55,3 @@ exports.addRider = (req, res) => {
     res.sendStatus(400);
   } 
 }
-
-exports.removeRider = (req, res) => {
-  // this is our "authentication" for now
-  if (req.body.password === 'admin123') {
-    if (req.rider) {
-      riderModel.remove({ _id : req.rider._id })
-        .then(doc => {
-          res.sendStatus(200);
-        }).catch(err => {
-          res.sendStatus(400);
-        });
-    } else { 
-      res.sendStatus(404);
-    }
-  }
-}
