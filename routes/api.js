@@ -12,20 +12,16 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.param('driverID', driverID);
 router.param('riderID', riderID);
 
-/* GET Request Handlers */
+/* Driver Routes */
 router.get('/driver/:driverID', getDriverByID);
+router.get('/driver/:driverID/rating', getDriverRating);
+router.post('/addDriver', addDriver);
+router.delete('/driver/:driverID', removeDriver);
+
+/* Rider Routes */
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
-router.get('/driver/:driverID/rating', getDriverRating);
-
-/* POST Request Handlers */
-router.post('/addDriver', addDriver);
 router.post('/addRider', addRider);
-
-/* PUT Request Handlers */
-
-/* DELETE Request Handlers */
-router.delete('/driver/:driverID', removeDriver);
 router.delete('/driver/:riderID', removeRider);
 
 module.exports = router;
