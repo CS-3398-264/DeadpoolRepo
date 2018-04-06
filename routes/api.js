@@ -1,9 +1,22 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const router = express.Router();
-const { driverModel, riderModel } = require('../models');
-const { driverID, getDriverByID, getDriverRating, addDriver, removeDriver } = require('../controllers/driverController');
-const { riderID, getRiderByID, getRiderRating, addRider, removeRider } = require('../controllers/riderController');
+const adminRouter = require('./admin');
+const { 
+  driverID, 
+  getDriverByID, 
+  getDriverRating, 
+  getAllDrivers, 
+  setAvailability 
+} = require('../controllers/driverController');
+const { 
+  riderID, 
+  getRiderByID, 
+  getRiderRating, 
+  addRider, 
+  removeRider, 
+  getAllRiders 
+} = require('../controllers/riderController');
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -12,18 +25,19 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.param('driverID', driverID);
 router.param('riderID', riderID);
 
-/* GET Request Handlers */
-router.get('/getDriver/:driverID?', getDriverByID);
-router.get('/getRider/:riderID?', getRiderByID);
-router.get('/getRating/rider/:riderID?', getRiderRating);
-router.get('/getRating/driver/:driverID?', getDriverRating);
+/* Admin Routes */
+router.use('/admin', adminRouter);
 
+/* Driver Routes */
+router.get('/driver/:driverID', getDriverByID);
+router.get('/driver/:driverID/rating', getDriverRating);
+router.put('/driver/:driverID/available', setAvailability);
+router.get('/driver', getAllDrivers);
 
-/* POST Request Handlers */
-router.post('/addDriver', addDriver);
-router.post('/addRider', addRider);
-router.post('/removeDriver/:driverID', removeDriver);
-router.post('/removeRider/:riderID', removeRider);
-
+/* Rider Routes */
+router.get('/rider/:riderID', getRiderByID);
+router.get('/rider/:riderID/rating', getRiderRating);
+router.get('/rider', getAllRiders);
+router.post('/rider', addRider);
 
 module.exports = router;

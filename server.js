@@ -1,9 +1,9 @@
 const path = require('path');
 const express = require('express');
-const app = express();
 const apiRouter = require('./routes/api');
-const portNum = process.env.PORT || 3000;
 const db = require('./utils/db');
+const portNum = process.env.PORT || 3000;
+const app = express();
 
 // display landing page on base route
 app.get('/', (req, res) => { 

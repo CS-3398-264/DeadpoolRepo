@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 
+exports = module.exports = {};
+
 /* OBJECT SCHEMAS */
 const driverSchema = mongoose.Schema({
   name: String,
   vehicle: String,
   capacity: Number,
+  available: Boolean,
   reviews: Array
 }, { collection : 'drivers' });
 

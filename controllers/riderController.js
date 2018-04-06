@@ -1,25 +1,41 @@
 const { riderModel } = require('../models');
 const { getRating } = require('../utils/tools');
 
+exports = module.exports = {};
+
 exports.riderID = (req, res, next, riderID) => {
-  riderModel.findOne({ _id : riderID }, (err, doc) => {
-    if (err) req.rider = null;
-    else req.rider = doc;
-  }).then(doc => {
+  riderModel.findOne({ _id : riderID }).then(doc => {
+    req.rider = doc;
     return next();
   }).catch(err => { 
+    req.rider = null;
     return next(); 
   });
 }
 
 exports.getRiderByID = (req, res) => { 
-  if (req.rider) res.send(req.rider);
-  else res.sendStatus(404);
+  if (req.rider) 
+    res.json(req.rider);
+  else 
+    res.sendStatus(404);
+}
+
+exports.getAllRiders = (req, res) => {
+  riderModel.find((err, docs) => {
+    if (docs) 
+      res.json(docs);
+    else 
+      res.sendStatus(404);
+  }).catch(err => {
+    res.sendStatus(400);
+  })
 }
 
 exports.getRiderRating = (req, res) => { 
-  if (req.rider) res.json(getRating(req.rider));
-  else res.sendStatus(404);
+  if (req.rider) 
+    res.json(getRating(req.rider));
+  else 
+    res.sendStatus(404);
 }
 
 exports.addRider = (req, res) => {
@@ -38,20 +54,4 @@ exports.addRider = (req, res) => {
   } else {
     res.sendStatus(400);
   } 
-}
-
-exports.removeRider = (req, res) => {
-  // this is our "authentication" for now
-  if (req.body.password === 'admin123') {
-    if (req.rider) {
-      riderModel.remove({ _id : req.rider._id })
-        .then(doc => {
-          res.sendStatus(200);
-        }).catch(err => {
-          res.sendStatus(400);
-        });
-    } else { 
-      res.sendStatus(404);
-    }
-  }
 }
