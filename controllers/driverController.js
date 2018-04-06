@@ -19,6 +19,15 @@ exports.getDriverByID = (req, res) => {
   else res.sendStatus(404);
 }
 
+exports.getAllDrivers = (req, res) => {
+  driverModel.find((err, docs) => {
+    if (docs) res.json(docs);
+    else res.sendStatus(404);
+  }).catch(err => {
+    res.sendStatus(400);
+  })
+}
+
 exports.getDriverRating = (req, res) => { 
   if (req.driver) res.json(getRating(req.driver));
   else res.sendStatus(404);

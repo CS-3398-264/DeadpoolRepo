@@ -19,6 +19,15 @@ exports.getRiderByID = (req, res) => {
   else res.sendStatus(404);
 }
 
+exports.getAllRiders = (req, res) => {
+  riderModel.find((err, docs) => {
+    if (docs) res.json(docs);
+    else res.sendStatus(404);
+  }).catch(err => {
+    res.sendStatus(400);
+  })
+}
+
 exports.getRiderRating = (req, res) => { 
   if (req.rider) res.json(getRating(req.rider));
   else res.sendStatus(404);
