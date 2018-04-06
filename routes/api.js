@@ -13,17 +13,19 @@ router.param('driverID', driverID);
 router.param('riderID', riderID);
 
 /* GET Request Handlers */
-router.get('/getDriver/:driverID?', getDriverByID);
-router.get('/getRider/:riderID?', getRiderByID);
-router.get('/getRating/rider/:riderID?', getRiderRating);
-router.get('/getRating/driver/:driverID?', getDriverRating);
-
+router.get('/driver/:driverID', getDriverByID);
+router.get('/rider/:riderID', getRiderByID);
+router.get('/rider/:riderID/rating', getRiderRating);
+router.get('/driver/:driverID/rating', getDriverRating);
 
 /* POST Request Handlers */
 router.post('/addDriver', addDriver);
 router.post('/addRider', addRider);
-router.post('/removeDriver/:driverID', removeDriver);
-router.post('/removeRider/:riderID', removeRider);
 
+/* PUT Request Handlers */
+
+/* DELETE Request Handlers */
+router.delete('/driver/:driverID', removeDriver);
+router.delete('/driver/:riderID', removeRider);
 
 module.exports = router;
