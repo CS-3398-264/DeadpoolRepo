@@ -1,4 +1,5 @@
 # TeamDeadpool
 Project 2 nUber
 
-Run: npm install, then npm start
+Run: npm install
+Run: npm start
