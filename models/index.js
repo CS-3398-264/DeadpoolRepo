@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+exports = module.exports = {};
+
 /* OBJECT SCHEMAS */
 const driverSchema = mongoose.Schema({
   name: String,

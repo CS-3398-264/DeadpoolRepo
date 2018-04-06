@@ -1,6 +1,8 @@
 const { riderModel } = require('../models');
 const { getRating } = require('../utils/tools');
 
+exports = module.exports = {};
+
 exports.riderID = (req, res, next, riderID) => {
   riderModel.findOne({ _id : riderID }, (err, doc) => {
     if (err) req.rider = null;

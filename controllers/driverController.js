@@ -1,6 +1,8 @@
 const { driverModel } = require('../models');
 const { getRating } = require('../utils/tools');
 
+exports = module.exports = {};
+
 exports.driverID = (req, res, next, driverID) => {
   driverModel.findOne({ _id : driverID }, (err, doc) => {
     if (err) req.driver = null;
