@@ -8,6 +8,7 @@
     "start": "node server.js"
   },
   "author": "Team Deadpool",
+  "repository": "https://github.com/CS-3398-264/DeadpoolRepo",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^5.0.1",
