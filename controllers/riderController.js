@@ -5,8 +5,10 @@ exports = module.exports = {};
 
 exports.riderID = (req, res, next, riderID) => {
   riderModel.findOne({ _id : riderID }, (err, doc) => {
-    if (err) req.rider = null;
-    else req.rider = doc;
+    if (err) 
+      req.rider = null;
+    else 
+      req.rider = doc;
   }).then(doc => {
     return next();
   }).catch(err => { 
@@ -15,22 +17,28 @@ exports.riderID = (req, res, next, riderID) => {
 }
 
 exports.getRiderByID = (req, res) => { 
-  if (req.rider) res.send(req.rider);
-  else res.sendStatus(404);
+  if (req.rider) 
+    res.send(req.rider);
+  else 
+    res.sendStatus(404);
 }
 
 exports.getAllRiders = (req, res) => {
   riderModel.find((err, docs) => {
-    if (docs) res.json(docs);
-    else res.sendStatus(404);
+    if (docs) 
+      res.json(docs);
+    else 
+      res.sendStatus(404);
   }).catch(err => {
     res.sendStatus(400);
   })
 }
 
 exports.getRiderRating = (req, res) => { 
-  if (req.rider) res.json(getRating(req.rider));
-  else res.sendStatus(404);
+  if (req.rider) 
+    res.json(getRating(req.rider));
+  else 
+    res.sendStatus(404);
 }
 
 exports.addRider = (req, res) => {

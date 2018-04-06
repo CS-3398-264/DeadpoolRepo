@@ -15,15 +15,16 @@ router.param('riderID', riderID);
 /* Driver Routes */
 router.get('/driver/:driverID', getDriverByID);
 router.get('/driver/:driverID/rating', getDriverRating);
+router.put('/driver/:driverID/availabile', setAvailability);
 router.get('/driver', getAllDrivers);
-router.post('/addDriver', addDriver);
+router.post('/driver', addDriver);
 router.delete('/driver/:driverID', removeDriver);
 
 /* Rider Routes */
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
 router.get('/rider', getAllRiders);
-router.post('/addRider', addRider);
+router.post('/rider', addRider);
 router.delete('/driver/:riderID', removeRider);
 
 module.exports = router;
