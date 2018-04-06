@@ -4,21 +4,18 @@ const { getRating } = require('../utils/tools');
 exports = module.exports = {};
 
 exports.driverID = (req, res, next, driverID) => {
-  driverModel.findOne({ _id : driverID }, (err, doc) => {
-    if (err) 
-      req.driver = null;
-    else 
-      req.driver = doc;
-  }).then(doc => {
+  driverModel.findOne({ _id : driverID }).then(doc => {
+    req.driver = doc;
     return next();
   }).catch(err => { 
+    req.driver = null;
     return next(); 
   });
 }
 
 exports.getDriverByID = (req, res) => { 
   if (req.driver) 
-    res.send(req.driver);
+    res.json(req.driver);
   else 
     res.sendStatus(404);
 }
@@ -42,19 +39,15 @@ exports.getDriverRating = (req, res) => {
 }
 
 exports.setAvailability = (req, res) => {
-  if (req.driver) {
-    const newStatus;
-    if (req.available && !req.driver.available) 
-      newStatus = true
-    else if (!req.available && req.driver.available) 
-      newStatus = false;
-    Tank.findByIdAndUpdate(id, { $set: { available: newStatus }}, { new: true }, function (err, tank) {
-      if (err) return handleError(err);
-      res.send(tank);
-    });
-  } else {
-    res.sendStatus(404);
-  }
+  driverModel.findByIdAndUpdate(
+    req.driver._id, 
+    { $set: { available: req.body.available } }, 
+    { new: true }, (err, driver) => {
+    if (driver) 
+      res.json(driver);
+    else
+      res.sendStatus(400);
+  });
 }
 
 exports.addDriver = (req, res) => {

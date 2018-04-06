@@ -4,21 +4,18 @@ const { getRating } = require('../utils/tools');
 exports = module.exports = {};
 
 exports.riderID = (req, res, next, riderID) => {
-  riderModel.findOne({ _id : riderID }, (err, doc) => {
-    if (err) 
-      req.rider = null;
-    else 
-      req.rider = doc;
-  }).then(doc => {
+  riderModel.findOne({ _id : riderID }).then(doc => {
+    req.rider = doc;
     return next();
   }).catch(err => { 
+    req.rider = null;
     return next(); 
   });
 }
 
 exports.getRiderByID = (req, res) => { 
   if (req.rider) 
-    res.send(req.rider);
+    res.json(req.rider);
   else 
     res.sendStatus(404);
 }
