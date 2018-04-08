@@ -27,4 +27,7 @@ router.delete('/driver/:driverID', removeDriver);
 /* Rider Routes */
 router.delete('/rider/:riderID', removeRider);
 
+/* catch incorrect routes */
+router.use('/', (req, res) => res.sendStatus(404));
+
 module.exports = router;
