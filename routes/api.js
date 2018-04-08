@@ -7,7 +7,8 @@ const {
   getDriverByID, 
   getDriverRating, 
   getAllDrivers, 
-  setAvailability 
+  setAvailability, 
+  rateRider 
 } = require('../controllers/driverController');
 const { 
   riderID, 
@@ -15,7 +16,8 @@ const {
   getRiderRating, 
   addRider, 
   removeRider, 
-  getAllRiders 
+  getAllRiders, 
+  rateDriver
 } = require('../controllers/riderController');
 
 router.use(bodyParser.json());
@@ -32,11 +34,13 @@ router.use('/admin', adminRouter);
 router.get('/driver/:driverID', getDriverByID);
 router.get('/driver/:driverID/rating', getDriverRating);
 router.put('/driver/:driverID/available', setAvailability);
+router.post('/driver/:driverID/rateRider', rateRider);
 router.get('/driver', getAllDrivers);
 
 /* Rider Routes */
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
+router.post('/rider/:riderID/rateDriver', rateDriver);
 router.get('/rider', getAllRiders);
 router.post('/rider', addRider);
 
