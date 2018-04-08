@@ -1,7 +1,10 @@
-const { riderModel } = require('../models');
+const { riderModel, driverModel } = require('../models');
 const { getRating } = require('../utils/tools');
 
 exports = module.exports = {};
+
+// NOTE: these methods currently return JSON (for debugging), 
+// but, for idempotency, may get switched to 200 OK later on
 
 exports.riderID = (req, res, next, riderID) => {
   riderModel.findOne({ _id : riderID }).then(doc => {
@@ -54,4 +57,18 @@ exports.addRider = (req, res) => {
   } else {
     res.sendStatus(400);
   } 
+}
+
+exports.rateDriver = (req, res) => {
+  if (req.rider) {
+    driverModel.findByIdAndUpdate(
+      req.body.driverID, 
+      { $push: { reviews: req.body.rating } }, 
+      { new: true }, (err, rider) => {
+      if (rider) 
+        res.json(rider);
+      else
+        res.sendStatus(400);
+    });
+  }
 }

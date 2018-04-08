@@ -8,12 +8,12 @@ const driverSchema = mongoose.Schema({
   vehicle: String,
   capacity: Number,
   available: Boolean,
-  reviews: Array
+  reviews: [Number]
 }, { collection : 'drivers' });
 
 const riderSchema = mongoose.Schema({
   name: String,
-  reviews: Array
+  reviews: [Number]
 }, { collection : 'riders' });
 
 /*
