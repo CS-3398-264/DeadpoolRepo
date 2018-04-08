@@ -19,6 +19,9 @@ const {
   getAllRiders, 
   rateDriver
 } = require('../controllers/riderController');
+const {
+  getCurrentRate
+} = require('../controllers/tripController');
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -43,5 +46,18 @@ router.get('/rider/:riderID/rating', getRiderRating);
 router.post('/rider/:riderID/rateDriver', rateDriver);
 router.get('/rider', getAllRiders);
 router.post('/rider', addRider);
+
+/* Trip Routes */
+router.get('/trip/currentRate', getCurrentRate);
+// these are just ideas for future trip functions
+// router.get('trip/:tripID', getTripByID);
+// router.get('trip/:tripID/status', getTripStatus); <- completed vs. not-completed
+// router.put('trip/:tripID/status', updateTripStatus); <- update status of trip
+// router.post('/trip/getEstimate', getTripEstimate);
+
+
+
+/* catch incorrect routes */
+router.use('/', (req, res) => res.sendStatus(404));
 
 module.exports = router;
