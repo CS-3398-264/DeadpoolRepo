@@ -45,6 +45,10 @@ exports.addRider = (req, res) => {
   if (req.body.name) {
     const newRider = new riderModel({
       name: req.body.name,
+      location: {
+        latitude: null,
+        longitude: null 
+      },
       reviews: []
     });
     newRider.save()

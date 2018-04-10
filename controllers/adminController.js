@@ -11,6 +11,10 @@ exports.addDriver = (req, res) => {
       vehicle: req.body.vehicle,
       capacity: req.body.capacity,
       available: false,
+      location: {
+        latitude: null,
+        longitude: null 
+      },
       reviews: []
     });
     newDriver.save()
