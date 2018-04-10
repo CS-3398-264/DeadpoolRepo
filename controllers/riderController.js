@@ -24,11 +24,8 @@ exports.getRiderByID = (req, res) => {
 }
 
 exports.getAllRiders = (req, res) => {
-  riderModel.find((err, docs) => {
-    if (docs) 
-      res.json(docs);
-    else 
-      res.sendStatus(404);
+  riderModel.find().then(docs => {
+    res.json(docs);
   }).catch(err => {
     res.sendStatus(400);
   })
@@ -51,13 +48,12 @@ exports.addRider = (req, res) => {
       },
       reviews: []
     });
-    newRider.save()
-      .then(doc => {
-        res.sendStatus(200);
-        console.log('saved new Rider "%s" to db. id: %s', doc.name, doc._id);
-      }).catch(err => {
-        res.sendStatus(400);
-      });
+    newRider.save().then(doc => {
+      res.sendStatus(200);
+      console.log('saved new Rider "%s" to db. id: %s', doc.name, doc._id);
+    }).catch(err => {
+    res.sendStatus(400);
+    });
   } else {
     res.sendStatus(400);
   } 
@@ -65,14 +61,12 @@ exports.addRider = (req, res) => {
 
 exports.rateDriver = (req, res) => {
   if (req.rider) {
-    driverModel.findByIdAndUpdate(
-      req.body.driverID, 
+    driverModel.findByIdAndUpdate(req.body.driverID, 
       { $push: { reviews: req.body.rating } }, 
-      { new: true }, (err, rider) => {
-      if (rider) 
-        res.json(rider);
-      else
-        res.sendStatus(400);
+      { new: true }).then(rider => {
+      res.json(rider);
+    }).catch(err => {
+      res.sendStatus(400);
     });
   }
 }

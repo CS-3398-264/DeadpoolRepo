@@ -18,20 +18,17 @@ exports.driverID = (req, res, next, driverID) => {
 
 exports.getDriverByID = (req, res) => { 
   if (req.driver) 
-    res.json(req.driver);
+    res.send(req.driver);
   else 
     res.sendStatus(404);
 }
 
 exports.getAllDrivers = (req, res) => {
-  driverModel.find((err, docs) => {
-    if (docs) 
-      res.json(docs);
-    else 
-      res.sendStatus(404);
+  driverModel.find().then(docs => {
+    res.send(docs);
   }).catch(err => {
-    res.sendStatus(400);
-  })
+    res.sendStatus(400); // should be different error code?
+  });                    // there are a few that should be changed..
 }
 
 exports.getDriverRating = (req, res) => { 
@@ -45,11 +42,10 @@ exports.setAvailability = (req, res) => {
   driverModel.findByIdAndUpdate(
     req.driver._id, 
     { $set: { available: req.body.available } }, 
-    { new: true }, (err, driver) => {
-    if (driver) 
-      res.json(driver);
-    else
-      res.sendStatus(400);
+    { new: true }).then(driver => {
+    res.json(driver);
+  }).catch(err => {
+    res.sendStatus(400);
   });
 }
 
@@ -58,11 +54,10 @@ exports.rateRider = (req, res) => {
     riderModel.findByIdAndUpdate(
       req.body.riderID, 
       { $push: { reviews: req.body.rating } }, 
-      { new: true }, (err, rider) => {
-      if (rider) 
-        res.json(rider);
-      else
-        res.sendStatus(400);
+      { new: true }).then(rider => {
+      res.json(rider);
+    }).catch(err => {
+      res.sendStatus(400);
     });
   }
 }

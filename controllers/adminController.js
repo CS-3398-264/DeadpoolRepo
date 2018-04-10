@@ -17,13 +17,12 @@ exports.addDriver = (req, res) => {
       },
       reviews: []
     });
-    newDriver.save()
-      .then(doc => {
-        res.sendStatus(200);
-        console.log('saved new driver "%s" to db. id: %s', doc.name, doc._id);
-      }).catch(err => {
-        res.sendStatus(400);
-      });
+    newDriver.save().then(doc => {
+      res.sendStatus(200);
+      console.log('saved new driver "%s" to db. id: %s', doc.name, doc._id);
+    }).catch(err => {
+      res.sendStatus(400);
+    });
   } else {
     res.sendStatus(400);
   } 
@@ -31,12 +30,11 @@ exports.addDriver = (req, res) => {
 
 exports.removeDriver = (req, res) => {
   if (req.driver) {
-    driverModel.remove({ _id : req.driver._id })
-      .then(doc => {
-        res.sendStatus(200);
-      }).catch(err => {
-        res.sendStatus(400);
-      });
+    driverModel.remove({ _id : req.driver._id }).then(doc => {
+      res.sendStatus(200);
+    }).catch(err => {
+      res.sendStatus(400);
+    });
   } else {
     res.sendStatus(404);
   }
@@ -45,12 +43,11 @@ exports.removeDriver = (req, res) => {
 /* Rider Methods */
 exports.removeRider = (req, res) => {
   if (req.rider) {
-    riderModel.remove({ _id : req.rider._id })
-      .then(doc => {
-        res.sendStatus(200);
-      }).catch(err => {
-        res.sendStatus(400);
-      });
+    riderModel.remove({ _id : req.rider._id }).then(doc => {
+      res.sendStatus(200);
+    }).catch(err => {
+      res.sendStatus(400);
+    });
   } else { 
     res.sendStatus(404);
   }
