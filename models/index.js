@@ -8,11 +8,19 @@ const driverSchema = mongoose.Schema({
   vehicle: String,
   capacity: Number,
   available: Boolean,
+  location: {
+    latitude: Number,
+    longitude: Number 
+  },
   reviews: [Number]
 }, { collection : 'drivers' });
 
 const riderSchema = mongoose.Schema({
   name: String,
+  location: {
+    latitude: Number,
+    longitude: Number 
+  },
   reviews: [Number]
 }, { collection : 'riders' });
 
