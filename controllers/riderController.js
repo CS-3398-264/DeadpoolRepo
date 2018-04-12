@@ -1,37 +1,36 @@
 const { riderModel, driverModel } = require('../models');
 const { getRating } = require('../utils/tools');
+const auth = require('basic-auth');
 
 exports = module.exports = {};
 
 // NOTE: these methods currently return JSON (for debugging), 
 // but, for idempotency, may get switched to 200 OK later on
 
-exports.riderID = (req, res, next, riderID) => {
-  riderModel.findOne({ _id : riderID }).then(doc => {
-    req.rider = doc;
-    return next();
-  }).catch(err => { 
+exports.riderID = async (req, res, next, riderID) => {
+  try {
+    const riderDoc = await riderModel.findOne({ _id : riderID });
+    req.rider = riderDoc;  
+  } catch (e) {
     req.rider = null;
-    return next(); 
-  });
+  }
+  return next();
 }
 
 exports.getRiderByID = (req, res) => { 
   if (req.rider) 
-    res.json(req.rider);
+    res.send(req.rider);
   else 
     res.sendStatus(404);
 }
 
-exports.getAllRiders = (req, res) => {
-  riderModel.find((err, docs) => {
-    if (docs) 
-      res.json(docs);
-    else 
-      res.sendStatus(404);
-  }).catch(err => {
-    res.sendStatus(400);
-  })
+exports.getAllRiders = async (req, res) => {
+  try {
+    const riderDocs = riderModel.find();
+    res.send(docs);
+  } catch (e) {
+    res.sendStatus(400); // should be different error code?
+  }
 }
 
 exports.getRiderRating = (req, res) => { 
@@ -41,34 +40,54 @@ exports.getRiderRating = (req, res) => {
     res.sendStatus(404);
 }
 
-exports.addRider = (req, res) => {
+exports.addRider = async (req, res) => {
   if (req.body.name) {
-    const newRider = new riderModel({
-      name: req.body.name,
-      reviews: []
-    });
-    newRider.save()
-      .then(doc => {
-        res.sendStatus(200);
-        console.log('saved new Rider "%s" to db. id: %s', doc.name, doc._id);
-      }).catch(err => {
-        res.sendStatus(400);
+    try {
+      const newRider = new riderModel({
+        name: req.body.name,
+        location: {
+          latitude: null,
+          longitude: null 
+        },
+        reviews: []
       });
+      const newDoc = await newRider.save();
+      console.log('saved new Rider "%s" to db. id: %s', newDoc.name, newDoc._id);
+      res.sendStatus(200);
+    } catch (e) {
+      res.sendStatus(400);
+    }
   } else {
     res.sendStatus(400);
   } 
 }
 
-exports.rateDriver = (req, res) => {
+exports.rateDriver = async (req, res) => {
   if (req.rider) {
-    driverModel.findByIdAndUpdate(
-      req.body.driverID, 
-      { $push: { reviews: req.body.rating } }, 
-      { new: true }, (err, rider) => {
-      if (rider) 
-        res.json(rider);
-      else
-        res.sendStatus(400);
-    });
+    try {
+      const updatedDriver = await driverModel.findByIdAndUpdate(
+        req.body.driverID, 
+        { $push: { reviews: req.body.rating } }, 
+        { new: true });
+      res.send(updatedRider);
+    } catch (e) {
+      res.sendStatus(400);
+    }
+  }
+}
+
+/* ADMIN AUTH REQUIRED */
+
+exports.removeRider = async (req, res) => {
+  const credentials = auth(req);
+  if (credentials && credentials.name == "admin" && credentials.pass == "password") {
+    try {
+      const rider = await riderModel.remove({ _id : req.rider._id });
+      res.sendStatus(200);
+    } catch (e) {
+      res.sendStatus(404);
+    }
+  } else {
+    res.sendStatus(401);
   }
 }

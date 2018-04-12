@@ -1,14 +1,15 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const router = express.Router();
-const adminRouter = require('./admin');
 const { 
   driverID, 
   getDriverByID, 
   getDriverRating, 
   getAllDrivers, 
   setAvailability, 
-  rateRider 
+  rateRider,
+  removeDriver,
+  addDriver 
 } = require('../controllers/driverController');
 const { 
   riderID, 
@@ -17,7 +18,7 @@ const {
   addRider, 
   removeRider, 
   getAllRiders, 
-  rateDriver
+  rateDriver,
 } = require('../controllers/riderController');
 const {
   getCurrentRate
@@ -30,14 +31,13 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.param('driverID', driverID);
 router.param('riderID', riderID);
 
-/* Admin Routes */
-router.use('/admin', adminRouter);
-
 /* Driver Routes */
 router.get('/driver/:driverID', getDriverByID);
+router.delete('/driver/:driverID', removeDriver);
 router.get('/driver/:driverID/rating', getDriverRating);
 router.put('/driver/:driverID/available', setAvailability);
 router.post('/driver/:driverID/rateRider', rateRider);
+router.post('/driver', addDriver);
 router.get('/driver', getAllDrivers);
 
 /* Rider Routes */
@@ -46,6 +46,7 @@ router.get('/rider/:riderID/rating', getRiderRating);
 router.post('/rider/:riderID/rateDriver', rateDriver);
 router.get('/rider', getAllRiders);
 router.post('/rider', addRider);
+router.delete('/rider/:riderID', removeRider);
 
 /* Trip Routes */
 router.get('/trip/currentRate', getCurrentRate);
@@ -54,8 +55,6 @@ router.get('/trip/currentRate', getCurrentRate);
 // router.get('trip/:tripID/status', getTripStatus); <- completed vs. not-completed
 // router.put('trip/:tripID/status', updateTripStatus); <- update status of trip
 // router.post('/trip/getEstimate', getTripEstimate);
-
-
 
 /* catch incorrect routes */
 router.use('/', (req, res) => res.sendStatus(404));
