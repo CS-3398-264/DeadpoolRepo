@@ -69,7 +69,7 @@ exports.rateDriver = async (req, res) => {
         req.body.driverID, 
         { $push: { reviews: req.body.rating } }, 
         { new: true });
-      res.send(updatedRider);
+      res.send(updatedDriver);
     } catch (e) {
       res.sendStatus(400);
     }

@@ -37,10 +37,10 @@ exports.getAllDrivers = async (req, res) => {
       const baseURL = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=";
       const key = "&key=" + process.env.GOOGLE_KEY;
       const destinations = "&destinations=30.229246,-97.725819";  // using hardcoded test address (E. Oltorf)
-      const origins = driverDocs.map(driver => String(driver.location.latitude) + ',' + String(driver.location.longitude)).join('|');
+      const origins = driverDocs.filter(driver => driver.location.latitude && driver.location.longitude).map(driver => String(driver.location.latitude) + ',' + String(driver.location.longitude)).join('|');
       const requestString = baseURL + origins + destinations + key;
       const distanceData = await getContent(requestString);
-      const newDriverDocs = driverDocs.map((driver, index) => {
+      const newDriverDocs = driverDocs.filter(driver => driver.location.latitude && driver.location.longitude).map((driver, index) => {
         return {
           ...JSON.parse(JSON.stringify(driver)), 
           distance : String(JSON.parse(distanceData).rows[index].elements[0].distance.text)
@@ -71,7 +71,7 @@ exports.setAvailability = async (req, res) => {
       req.driver._id, 
       { $set: { available: req.body.available } }, 
       { new: true });
-    res.send(driver); // should probably just return 200 status for 'idempotency'
+    res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
   } catch (e) {
     res.sendStatus(400);
   }
