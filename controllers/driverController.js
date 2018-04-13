@@ -1,6 +1,7 @@
 const { driverModel, riderModel } = require('../models');
-const { getRating } = require('../utils/tools');
+const { getRating, getContent } = require('../utils/tools');
 const auth = require('basic-auth');
+require('dotenv').config();
 
 exports = module.exports = {};
 
@@ -26,7 +27,31 @@ exports.getDriverByID = (req, res) => {
 
 exports.getAllDrivers = async (req, res) => {
   try {
-    const driverDocs = await driverModel.find();
+    let driverDocs = await driverModel.find();
+
+    if (req.query.available == 'true') {
+      driverDocs = driverDocs.filter(driver => driver.available == true);
+    }
+    if (req.query.maxDistance) {
+      // calculate disatnce here so we can filter it
+      const baseURL = "https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=";
+      const key = "&key=" + process.env.GOOGLE_KEY;
+      const destinations = "&destinations=30.229246,-97.725819";  // using hardcoded test address (E. Oltorf)
+      const origins = driverDocs.map(driver => String(driver.location.latitude) + ',' + String(driver.location.longitude)).join('|');
+      const requestString = baseURL + origins + destinations + key;
+      const distanceData = await getContent(requestString);
+      const newDriverDocs = driverDocs.map((driver, index) => {
+        return {
+          ...JSON.parse(JSON.stringify(driver)), 
+          distance : String(JSON.parse(distanceData).rows[index].elements[0].distance.text)
+        };
+      });
+      driverDocs = newDriverDocs.filter(driver => 
+        parseFloat(driver.distance.split(' ')[0]) <= req.query.maxDistance);
+    }
+    if (req.query.minCapacity) {
+      driverDocs = driverDocs.filter(driver => driver.capacity >= req.query.minCapacity);
+    }
     res.send(driverDocs);
   } catch (e) {
     res.sendStatus(400); // should be different error code?
