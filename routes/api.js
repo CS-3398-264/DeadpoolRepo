@@ -32,20 +32,20 @@ router.param('driverID', driverID);
 router.param('riderID', riderID);
 
 /* Driver Routes */
+router.get('/driver', getAllDrivers);
 router.get('/driver/:driverID', getDriverByID);
-router.delete('/driver/:driverID', removeDriver);
 router.get('/driver/:driverID/rating', getDriverRating);
 router.put('/driver/:driverID/available', setAvailability);
-router.post('/driver/:driverID/rateRider', rateRider);
 router.post('/driver', addDriver);
-router.get('/driver', getAllDrivers);
+router.post('/driver/:driverID/rateRider', rateRider);
+router.delete('/driver/:driverID', removeDriver);
 
 /* Rider Routes */
+router.get('/rider', getAllRiders);
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
-router.post('/rider/:riderID/rateDriver', rateDriver);
-router.get('/rider', getAllRiders);
 router.post('/rider', addRider);
+router.post('/rider/:riderID/rateDriver', rateDriver);
 router.delete('/rider/:riderID', removeRider);
 
 /* Trip Routes */

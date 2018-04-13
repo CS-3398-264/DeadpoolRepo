@@ -26,8 +26,8 @@ exports.getRiderByID = (req, res) => {
 
 exports.getAllRiders = async (req, res) => {
   try {
-    const riderDocs = riderModel.find();
-    res.send(docs);
+    const riderDocs = await riderModel.find();
+    res.send(riderDocs);
   } catch (e) {
     res.sendStatus(400); // should be different error code?
   }

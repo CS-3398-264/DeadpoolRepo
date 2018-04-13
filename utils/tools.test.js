@@ -27,5 +27,4 @@ describe('calculateRate() should return the correct rate based on time.', () => 
   test('Should return medium rate during the morning.', () => {
     expect(tools.calculateRate(6)).toBe(1.25);
   });
-
 });

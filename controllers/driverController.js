@@ -26,8 +26,8 @@ exports.getDriverByID = (req, res) => {
 
 exports.getAllDrivers = async (req, res) => {
   try {
-    const driverDocs = driverModel.find();
-    res.send(docs);
+    const driverDocs = await driverModel.find();
+    res.send(driverDocs);
   } catch (e) {
     res.sendStatus(400); // should be different error code?
   }
