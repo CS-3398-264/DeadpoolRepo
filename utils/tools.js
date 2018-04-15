@@ -1,5 +1,23 @@
 exports = module.exports = {};
 
+const DM_KEY = `&key=${process.env.GOOGLE_DM_KEY}`;
+const DIR_KEY = `&key=${process.env.GOOGLE_DIR_KEY}`;
+
+const getContent = url => {
+  return new Promise((resolve, reject) => {
+    const lib = url.startsWith('https') ? require('https') : require('http');
+    const request = lib.get(url, (response) => {
+      if (response.statusCode < 200 || response.statusCode > 299) {
+         reject(new Error('Failed to load page, status code: ' + response.statusCode));
+       }
+      const body = [];
+      response.on('data', (chunk) => body.push(chunk));
+      response.on('end', () => resolve(JSON.parse(body.join(''))));
+    });
+    request.on('error', (err) => reject(err))
+    });
+}
+
 exports.getRating = userObj => 
   ((userObj.reviews.reduce((a, b) => a + b, 0) / userObj.reviews.length) || 0).toFixed(2);
 
@@ -12,23 +30,38 @@ exports.calculateRate = currentTime => {
     return 1.25;
 }
 
-exports.getContent = (url) => {
-  return new Promise((resolve, reject) => {
-    // select http or https module, depending on reqested url
-    const lib = url.startsWith('https') ? require('https') : require('http');
-    const request = lib.get(url, (response) => {
-      // handle http errors
-      if (response.statusCode < 200 || response.statusCode > 299) {
-         reject(new Error('Failed to load page, status code: ' + response.statusCode));
-       }
-      // temporary data holder
-      const body = [];
-      // on every content chunk, push it to the data array
-      response.on('data', (chunk) => body.push(chunk));
-      // we are done, resolve promise with those joined chunks
-      response.on('end', () => resolve(body.join('')));
-    });
-    // handle connection errors of the request
-    request.on('error', (err) => reject(err))
-    })
-};
+exports.computeMileage = distance => {
+  const value = distance.split(' ')[0];
+  const units = distance.split(' ')[1];
+  return units == 'mi' ? value : 1;
+}
+
+exports.simulateTrip = tripRequest => {
+  console.log('simulating trip. bleep bloop.');
+  const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=Austin&destination=30.229246,-97.725819${DM_KEY}`;
+  return getContent(dirReq);
+}
+
+exports.distanceMatrixRequest = (origin, destination) => {
+  const baseURL = 'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=';
+  let reqOrigin;
+  let reqDest;
+  if (Array.isArray(origin)) {
+    reqOrigin = `${origin[0].latitude},${origin[0].longitude}`;
+    for (i = 1; i < origin.length; i++) {
+      reqOrigin += `|${origin[1].latitude},${origin[1].longitude}`;
+    }
+  } else {
+    reqOrigin = `${origin.latitude},${origin.longitude}`;
+  }
+  if (Array.isArray(destination)) {
+    reqDest = `&destinations=${destination[0].latitude},${destination[0].longitude}`;
+    for (i=1; i < destination.length; i++) {
+      reqDest += `|${destination[1].latitude},${destination[1].longitude}`;
+    }
+  } else {
+    reqDest = `&destinations=${destination.latitude},${destination.longitude}`;
+  }
+  const requestString = baseURL + reqOrigin + reqDest + DM_KEY;
+  return getContent(requestString);
+}
