@@ -1,5 +1,5 @@
 const { tripModel } = require('../models');
-const { calculateRate } = require('../utils/tools');
+const { calculateRate, simulateTrip } = require('../utils/tools');
 
 exports = module.exports = {};
 
@@ -15,6 +15,8 @@ exports.tripSimulation = async (req, res) => {
       count++;
       if (count > 9) clearInterval(intervalID);
     }, 1000);
+    const tripData = await simulateTrip('test');
+    tripData.routes[0].legs.forEach(leg=>leg.steps.forEach(step=>console.log(step)));
     res.sendStatus(200);
   } catch (e) {
     console.error(e.message || e);

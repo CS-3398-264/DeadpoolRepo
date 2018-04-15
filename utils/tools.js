@@ -1,7 +1,8 @@
 require('dotenv').config();
 exports = module.exports = {};
 
-const API_KEY = `&key=${process.env.GOOGLE_KEY}`;
+const DM_KEY = `&key=${process.env.GOOGLE_DM_KEY}`;
+const DIR_KEY = `&key=${process.env.GOOGLE_DIR_KEY}`;
 
 const getContent = url => {
   return new Promise((resolve, reject) => {
@@ -15,7 +16,7 @@ const getContent = url => {
       response.on('end', () => resolve(JSON.parse(body.join(''))));
     });
     request.on('error', (err) => reject(err))
-    })
+    });
 }
 
 exports.getRating = userObj => 
@@ -38,6 +39,8 @@ exports.computeMileage = distance => {
 
 exports.simulateTrip = tripRequest => {
   console.log('simulating trip. bleep bloop.');
+  const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=Austin&destination=30.229246,-97.725819${DM_KEY}`;
+  return getContent(dirReq);
 }
 
 exports.distanceMatrixRequest = (origin, destination) => {
@@ -60,6 +63,6 @@ exports.distanceMatrixRequest = (origin, destination) => {
   } else {
     reqDest = `&destinations=${destination.latitude},${destination.longitude}`;
   }
-  const requestString = baseURL + reqOrigin + reqDest + API_KEY;
+  const requestString = baseURL + reqOrigin + reqDest + DM_KEY;
   return getContent(requestString);
 }
