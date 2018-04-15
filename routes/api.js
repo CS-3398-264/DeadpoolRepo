@@ -18,13 +18,16 @@ const {
   getRiderByID, 
   getRiderRating, 
   getPotentialDrivers,
+  getTripEstimate,
   setRiderLocation,
   rateDriver,
+  requestPickup,
   addRider, 
   removeRider
 } = require('../controllers/riderController');
 const {
-  getCurrentRate
+  getCurrentRate,
+  tripSimulation
 } = require('../controllers/tripController');
 
 router.use(bodyParser.json());
@@ -49,13 +52,16 @@ router.get('/rider', getAllRiders);
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
 router.get('/rider/:riderID/findDrivers', getPotentialDrivers);
+router.get('/rider/:riderID/tripEstimate', getTripEstimate);
 router.put('/rider/:riderID/location', setRiderLocation);
 router.post('/rider/:riderID/rateDriver', rateDriver);
+router.post('/rider/:riderID/requestPickup', requestPickup);
 router.post('/rider', addRider);
 router.delete('/rider/:riderID', removeRider);
 
 /* Trip Routes */
 router.get('/trip/currentRate', getCurrentRate);
+router.post('/trip/simulation', tripSimulation);
 // these are just ideas for future trip functions
 // router.get('trip/:tripID', getTripByID);
 // router.get('trip/:tripID/status', getTripStatus); <- completed vs. not-completed

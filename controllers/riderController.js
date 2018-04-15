@@ -1,5 +1,5 @@
-const { riderModel, driverModel } = require('../models');
-const { getRating, getContent } = require('../utils/tools');
+const { riderModel, driverModel, tripModel } = require('../models');
+const { getRating, calculateRate, computeMileage, distanceMatrixRequest } = require('../utils/tools');
 const auth = require('basic-auth');
 
 exports = module.exports = {};
@@ -42,42 +42,53 @@ exports.getPotentialDrivers = async (req, res) => {
     if (req.query.minCapacity) {
       driverDocs = driverDocs.filter(driver => driver.capacity >= req.query.minCapacity);
     }
-    // calculate disatnce here so we can filter it
-    const baseURL = 'https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=';
-    const key = `&key=${process.env.GOOGLE_KEY}`;
-    const destinations = `&destinations=${req.rider.location.latitude},${req.rider.location.longitude}`;
-    const origins = driverDocs.filter(driver => driver.location.latitude && driver.location.longitude).map(driver => String(driver.location.latitude) + ',' + String(driver.location.longitude)).join('|');
-    const requestString = baseURL + origins + destinations + key;
-    const distanceData = await getContent(requestString);
-    const newDriverDocs = driverDocs.filter(driver => driver.location.latitude && driver.location.longitude).map((driver, index) => {
-      return {
-        ...JSON.parse(JSON.stringify(driver)), 
-        distance : String(JSON.parse(distanceData).rows[index].elements[0].distance.text)
-      };
+    const distanceData = await distanceMatrixRequest(
+      driverDocs.filter(driver => driver.location.latitude && driver.location.longitude).map(driver => driver.location), 
+      req.rider.location
+    );
+    const newDriverDocs = driverDocs.filter(driver => driver.location.latitude && driver.location.longitude)
+      .map((driver, index) => {
+        return {
+          ...JSON.parse(JSON.stringify(driver)), 
+          distance : String(distanceData.rows[index].elements[0].distance.text),
+          timeToPickup : String(distanceData.rows[index].elements[0].duration.text)
+        };
     });
-    driverDocs = newDriverDocs.filter(driver => 
-      parseFloat(driver.distance.split(' ')[0]) <= maxDistance);
+    // there could be an issue here with drivers that are so close their distance is measured in feet
+    // instead of miles... (implement the calculateMileage util function)
+    driverDocs = newDriverDocs.filter(driver => parseFloat(computeMileage(driver.distance)) <= maxDistance);
     res.send(driverDocs);
   } catch (e) {
-    console.error(e);
+    console.error(e.message || e);
     res.sendStatus(400); // should be different error code?
   }
 }
 
-exports.setRiderLocation = async (req, res) => {
+exports.getTripEstimate = async (req, res) => {
   try {
-    if (!req.body.latitude || !req.body.longitude)
-      throw 'Error: Incomplete parameters.';
-    const updatedRider = await riderModel.findByIdAndUpdate(
-      req.rider._id, 
-      { $set: { location: {
-          latitude: req.body.latitude,
-          longitude: req.body.longitude 
-      } } }, { new: true });
-    res.send(updatedRider); // should probably just return 200 status for 'idempotency'
+    if (!req.query.lat || !req.query.lon)
+      throw 'Error: Destination not set.';
+    else if (!req.rider.location.latitude || !req.rider.location.longitude)
+      throw 'Error: Rider does not have location set.';
+    const dest = {
+      latitude: req.query.lat,
+      longitude: req.query.lon
+    };
+    const tripData = await distanceMatrixRequest(req.rider.location, dest);
+    const currentRate = calculateRate(new Date(Date.now()).getHours());
+    const mileage = computeMileage(tripData.rows[0].elements[0].distance.text);
+    const tripCost = `$${(currentRate * mileage).toFixed(2)}`;
+    const tripEstimate = {
+      pickup: tripData.origin_addresses[0],
+      dropoff: tripData.destination_addresses[0],
+      distance: tripData.rows[0].elements[0].distance.text,
+      travelTime: tripData.rows[0].elements[0].duration.text,
+      cost: tripCost
+    };
+    res.send(tripEstimate);
   } catch (e) {
-    console.error(e);
-    res.sendStatus(400);
+    console.error(e.message || e);
+    res.sendStatus(400); // should be different error code?
   }
 }
 
@@ -88,8 +99,93 @@ exports.getRiderRating = (req, res) => {
     res.sendStatus(404);
 }
 
+exports.setRiderLocation = async (req, res) => {
+  try {
+    if (!req.body.latitude || !req.body.longitude)
+      throw 'Error: Incomplete location.';
+    const updatedRider = await riderModel.findByIdAndUpdate(
+      req.rider._id, 
+      { $set: { location: {
+          latitude: req.body.latitude,
+          longitude: req.body.longitude 
+      } } }, { new: true }
+    );
+    res.send(updatedRider); // should probably just return 200 status for 'idempotency'
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(400);
+  }
+}
+
+exports.rateDriver = async (req, res) => {
+  try {
+    if (!req.rider)
+      throw 'Error: Invalid riderID.';
+    const updatedDriver = await driverModel.findByIdAndUpdate(
+      req.body.driverID, 
+      { $push: { reviews: parseFloat(req.body.rating).toFixed(2) } }, 
+      { new: true }
+    );
+    res.send(updatedDriver);
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(400);
+  }
+}
+
+exports.requestPickup = async (req, res) => {
+  try {
+    const requestedDriver = await driverModel.findOne({ _id : req.body.driverID });
+    if (!req.rider.location.latitude || !req.rider.location.longitude)
+      throw 'Error: Current location not set.';
+    else if (!req.body.dropoff.latitude || !req.body.dropoff.longitude)
+      throw 'Error: Destination coordinates incomplete.'
+    else if (!requestedDriver.available) 
+      throw 'Error: Selected driver is unavailable.';
+    const tripData = await distanceMatrixRequest(
+      [req.rider.location, requestedDriver.location], 
+      [req.body.dropoff, req.rider.location]
+    );
+    const currentRate = calculateRate(new Date(Date.now()).getHours());
+    const mileage = computeMileage(tripData.rows[0].elements[0].distance.text);
+    const tripRequest = new tripModel({
+      riderID: req.rider._id,
+      driverID: requestedDriver._id,
+      isComplete: false,
+      rate: currentRate,
+      cost: `$${(currentRate * mileage).toFixed(2)}`,
+      pickup: {
+        address: tripData.origin_addresses[0],
+        latitude: req.rider.location.latitude,
+        longitude: req.rider.location.longitude
+      },
+      dropoff: {
+        address: tripData.destination_addresses[0],
+        latitude: req.body.dropoff.latitude,
+        longitude: req.body.dropoff.longitude
+      },
+      distance: tripData.rows[0].elements[0].distance.text,
+      travelTime: tripData.rows[0].elements[0].duration.text,
+      timeToPickup: tripData.rows[1].elements[1].duration.text
+    });
+    const tripDoc = await tripRequest.save();
+    const updatedDriver = await driverModel.findByIdAndUpdate(
+      req.body.driverID,
+      { $set: {
+        available: false,
+        currentTrip: tripDoc._id
+      } }, 
+      { new: true }
+    );
+    res.send(tripDoc);
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(400);
+  }
+}
+
 exports.addRider = async (req, res) => {
-  if (req.body.name) {
+  if (req.body.name) { // refactor these conditional style checks to use 'throw' instead
     try {
       const newRider = new riderModel({
         name: req.body.name,
@@ -108,20 +204,6 @@ exports.addRider = async (req, res) => {
   } else {
     res.sendStatus(400);
   } 
-}
-
-exports.rateDriver = async (req, res) => {
-  if (req.rider) {
-    try {
-      const updatedDriver = await driverModel.findByIdAndUpdate(
-        req.body.driverID, 
-        { $push: { reviews: req.body.rating } }, 
-        { new: true });
-      res.send(updatedDriver);
-    } catch (e) {
-      res.sendStatus(400);
-    }
-  }
 }
 
 /* ADMIN AUTH REQUIRED */

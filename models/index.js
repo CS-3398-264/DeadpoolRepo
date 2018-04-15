@@ -12,7 +12,8 @@ const driverSchema = mongoose.Schema({
     latitude: Number,
     longitude: Number 
   },
-  reviews: [Number]
+  reviews: [Number],
+  currentTrip: String
 }, { collection : 'drivers' });
 
 const riderSchema = mongoose.Schema({
@@ -27,17 +28,22 @@ const riderSchema = mongoose.Schema({
 const tripSchema = mongoose.Schema({
   isComplete: Boolean,
   rate: Number,
-  totalPrice: Number,
-  startLoc: {
+  cost: String,
+  pickup: {
+    address: String,
     latitude: Number,
     longitude: Number 
   },
-  endLoc: {
+  dropoff: {
+    address: String,
     latitude: Number,
     longitude: Number 
   },
   driverID: String,
-  riderID: String
+  riderID: String,
+  distance: String,
+  travelTime: String,
+  timeToPickup: String
 }, { collection : 'trips' });
 
 /* ORM Models */

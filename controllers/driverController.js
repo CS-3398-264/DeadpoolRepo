@@ -1,7 +1,6 @@
 const { driverModel, riderModel } = require('../models');
-const { getRating, getContent } = require('../utils/tools');
+const { getRating } = require('../utils/tools');
 const auth = require('basic-auth');
-require('dotenv').config();
 
 exports = module.exports = {};
 
@@ -28,7 +27,6 @@ exports.getDriverByID = (req, res) => {
 exports.getAllDrivers = async (req, res) => {
   try {
     let driverDocs = await driverModel.find();
-
     if (req.query.available) {
       driverDocs = driverDocs.filter(driver => driver.available == JSON.parse(req.query.available));
     }
@@ -53,7 +51,8 @@ exports.setAvailability = async (req, res) => {
     const updatedDriver = await driverModel.findByIdAndUpdate(
       req.driver._id, 
       { $set: { available: req.body.available } }, 
-      { new: true });
+      { new: true }
+    );
     res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
   } catch (e) {
     res.sendStatus(400);
@@ -62,17 +61,18 @@ exports.setAvailability = async (req, res) => {
 
 exports.setDriverLocation = async (req, res) => {
   try {
-    if (!req.body.location.latitude || !req.body.location.longitude)
+    if (!req.body.latitude || !req.body.longitude)
       throw 'Error: Incomplete parameters.';
     const updatedDriver = await driverModel.findByIdAndUpdate(
       req.driver._id, 
       { $set: { location: {
           latitude: req.body.latitude,
           longitude: req.body.longitude 
-      } } }, { new: true });
+      } } }, { new: true }
+    );
     res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
   } catch (e) {
-    console.log(e);
+    console.error(e.messge || e);
     res.sendStatus(400);
   }
 }
@@ -82,7 +82,7 @@ exports.rateRider = async (req, res) => {
     try {
       const updatedRider = await riderModel.findByIdAndUpdate(
         req.body.riderID, 
-        { $push: { reviews: req.body.rating } }, 
+        { $push: { reviews: parseFloat(req.body.rating).toFixed(2) } }, 
         { new: true });
       res.send(updatedRider); // should probably just return 200 for 'idempotency'
     } catch (e) {
@@ -107,7 +107,8 @@ exports.addDriver = async (req, res) => {
           latitude: null,
           longitude: null 
         },
-        reviews: []
+        reviews: [],
+        currentTrip: null
       });
       const newDoc = await newDriver.save();
       console.log('saved new driver "%s" to db. id: %s', newDoc.name, newDoc._id);
