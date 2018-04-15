@@ -3,22 +3,25 @@ const express = require('express');
 const router = express.Router();
 const { 
   driverID, 
+  getAllDrivers, 
   getDriverByID, 
   getDriverRating, 
-  getAllDrivers, 
-  setAvailability, 
+  setAvailability,
+  setDriverLocation,
   rateRider,
-  removeDriver,
-  addDriver 
+  addDriver,
+  removeDriver
 } = require('../controllers/driverController');
 const { 
   riderID, 
+  getAllRiders, 
   getRiderByID, 
   getRiderRating, 
-  addRider, 
-  removeRider, 
-  getAllRiders, 
+  getPotentialDrivers,
+  setRiderLocation,
   rateDriver,
+  addRider, 
+  removeRider
 } = require('../controllers/riderController');
 const {
   getCurrentRate
@@ -36,16 +39,19 @@ router.get('/driver', getAllDrivers);
 router.get('/driver/:driverID', getDriverByID);
 router.get('/driver/:driverID/rating', getDriverRating);
 router.put('/driver/:driverID/available', setAvailability);
-router.post('/driver', addDriver);
+router.put('/driver/:driverID/location', setDriverLocation);
 router.post('/driver/:driverID/rateRider', rateRider);
+router.post('/driver', addDriver);
 router.delete('/driver/:driverID', removeDriver);
 
 /* Rider Routes */
 router.get('/rider', getAllRiders);
 router.get('/rider/:riderID', getRiderByID);
 router.get('/rider/:riderID/rating', getRiderRating);
-router.post('/rider', addRider);
+router.get('/rider/:riderID/findDrivers', getPotentialDrivers);
+router.put('/rider/:riderID/location', setRiderLocation);
 router.post('/rider/:riderID/rateDriver', rateDriver);
+router.post('/rider', addRider);
 router.delete('/rider/:riderID', removeRider);
 
 /* Trip Routes */

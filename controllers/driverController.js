@@ -1,6 +1,7 @@
 const { driverModel, riderModel } = require('../models');
-const { getRating } = require('../utils/tools');
+const { getRating, getContent } = require('../utils/tools');
 const auth = require('basic-auth');
+require('dotenv').config();
 
 exports = module.exports = {};
 
@@ -26,7 +27,14 @@ exports.getDriverByID = (req, res) => {
 
 exports.getAllDrivers = async (req, res) => {
   try {
-    const driverDocs = await driverModel.find();
+    let driverDocs = await driverModel.find();
+
+    if (req.query.available) {
+      driverDocs = driverDocs.filter(driver => driver.available == JSON.parse(req.query.available));
+    }
+    if (req.query.minCapacity) {
+      driverDocs = driverDocs.filter(driver => driver.capacity >= req.query.minCapacity);
+    }
     res.send(driverDocs);
   } catch (e) {
     res.sendStatus(400); // should be different error code?
@@ -46,8 +54,25 @@ exports.setAvailability = async (req, res) => {
       req.driver._id, 
       { $set: { available: req.body.available } }, 
       { new: true });
-    res.send(driver); // should probably just return 200 status for 'idempotency'
+    res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
   } catch (e) {
+    res.sendStatus(400);
+  }
+}
+
+exports.setDriverLocation = async (req, res) => {
+  try {
+    if (!req.body.location.latitude || !req.body.location.longitude)
+      throw 'Error: Incomplete parameters.';
+    const updatedDriver = await driverModel.findByIdAndUpdate(
+      req.driver._id, 
+      { $set: { location: {
+          latitude: req.body.latitude,
+          longitude: req.body.longitude 
+      } } }, { new: true });
+    res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
+  } catch (e) {
+    console.log(e);
     res.sendStatus(400);
   }
 }
@@ -70,7 +95,7 @@ exports.rateRider = async (req, res) => {
 
 exports.addDriver = async (req, res) => {
   const credentials = auth(req);
-  if (credentials && credentials.name == "admin" && credentials.pass == "password" &&
+  if (credentials && credentials.name == 'admin' && credentials.pass == 'password' &&
       req.body.name && req.body.vehicle && req.body.capacity) {
     try {
       const newDriver = new driverModel({
@@ -98,7 +123,7 @@ exports.addDriver = async (req, res) => {
 
 exports.removeDriver = async (req, res) => {
   const credentials = auth(req);
-  if (credentials && credentials.name == "admin" && credentials.pass == "password") {
+  if (credentials && credentials.name == 'admin' && credentials.pass == 'password') {
     try {
       const driver = await driverModel.remove({ _id : req.driver._id });
       res.sendStatus(200);
