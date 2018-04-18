@@ -1,4 +1,6 @@
+const { driverModel } = require('../models');
 require('dotenv').config();
+
 exports = module.exports = {};
 
 const DM_KEY = `&key=${process.env.GOOGLE_DM_KEY}`;
@@ -37,10 +39,34 @@ exports.computeMileage = distance => {
   return units == 'mi' ? value : 1;
 }
 
-exports.simulateTrip = tripRequest => {
+exports.simulateTrip = async tripRequest => {
   console.log('simulating trip. bleep bloop.');
+  let delayMS = 0;
   const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=Austin&destination=30.229246,-97.725819${DM_KEY}`;
-  return getContent(dirReq);
+  const tripData = await getContent(dirReq);
+  tripData.routes[0].legs[0].steps.forEach((step, i) => {
+    delayMS += (2500 * i) + (step.duration.value * 100); // this can be adjusted... just an estimate
+    setTimeout(async () => {
+      console.log(`step ${i}: taking ${step.duration.value}ms to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
+      // make an update to drivers position here
+      try {
+        const updatedDriver = await driverModel.findByIdAndUpdate(
+          "5abdd27a734d1d0cf303e71f", 
+          { $set: { location: {
+              latitude: step.end_location.lat,
+              longitude: step.end_location.lng
+          } } }, { new: true }
+        );
+        //console.log(updatedDriver); // should probably just return 200 status for 'idempotency'
+      } catch (e) {
+        console.error(e.messge || e);
+      }
+      // end
+      if (i == tripData.routes[0].legs[0].steps.length-1)
+        console.log('conditional last step');
+        // here we can flip availability back for the driver
+    }, delayMS);
+  });
 }
 
 exports.distanceMatrixRequest = (origin, destination) => {
