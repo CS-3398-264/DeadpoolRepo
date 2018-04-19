@@ -92,3 +92,83 @@ exports.distanceMatrixRequest = (origin, destination) => {
   const requestString = baseURL + reqOrigin + reqDest + DM_KEY;
   return getContent(requestString);
 }
+
+exports.driverTripSimulation = (driverID, startLocation, endLocation, tripType) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (tripType === 'pickup') {
+        console.log('starting driver sim... driver going unavailable');
+        const unavailable = await driverModel.findByIdAndUpdate(
+          driverID, 
+          { $set: { available: false } }, { new: true }
+        );
+      }
+      let delayMS = 0;
+      const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation}&destination=${endLocation}${DM_KEY}`;
+      const tripData = await getContent(dirReq);
+      //console.log(tripData.routes[0].legs);
+      // start iterating through the steps in the directions
+      tripData.routes[0].legs[0].steps.forEach((step, i) => {
+        delayMS += (200 * i) + (step.duration.value * 10); // this can be adjusted... just an estimate
+        setTimeout(async () => {
+          console.log(`step ${i}: taking ${step.duration.value}ms to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
+          // make an update to drivers position here
+          const updatedDriver = await driverModel.findByIdAndUpdate(
+            driverID, 
+            { $set: { 
+              location: {
+                latitude: step.end_location.lat,
+                longitude: step.end_location.lng
+              } 
+            } }, { new: true }
+          );
+          if (i == tripData.routes[0].legs[0].steps.length-1) {
+            // if this is a rider dropoff, go back on available
+            if (tripType === 'dropoff') {
+              console.log('drive finished. going back on available');
+              const updatedDriver = await driverModel.findByIdAndUpdate(
+                driverID, 
+                { $set: { available: true } }, 
+                { new: true }
+              );
+            }
+            resolve('done');
+          }
+        }, delayMS);
+      });
+    } catch (e) {
+      console.error(e.messge || e);
+      reject(e.message || e);
+    }
+  });
+}
+
+exports.newDirectionRequest = (driverLocation, pickupLocation, dropoffLocation) => {
+  const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=` +
+                 `${driverLocation.latitude},${driverLocation.longitude}` +
+                 `&destination=${dropoffLocation.latitude},${dropoffLocation.longitude}` + 
+                 `&waypoints=optimize:true|${pickupLocation.latitude},${pickupLocation.longitude}` + 
+                 `&key=${DIR_KEY}`;
+  return getContent(dirReq);
+}
+
+exports.buildSteps = stepContent => {
+  return stepContent.map(step => {
+    return {
+      "distance": {
+        "text": step.distance.text,
+        "inMeters": step.distance.value
+      },
+      "duration": {
+        "text": step.duration.text,
+        "inSeconds": step.duration.value
+      },
+      "endLocation": {
+        "latitude": step.end_location.lat,
+        "longitude": step.end_location.lng
+      },
+      "maneuver": step.maneuver || null,
+      "html": step.html_instructions || bull
+    }
+  });
+}

@@ -43,7 +43,11 @@ const tripSchema = mongoose.Schema({
   riderID: String,
   distance: String,
   travelTime: String,
-  timeToPickup: String
+  timeToPickup: String,
+  directions: {
+    toPickup: Object,
+    toDropoff: Object
+  }
 }, { collection : 'trips' });
 
 /* ORM Models */
