@@ -29,6 +29,11 @@ const tripSchema = mongoose.Schema({
   isComplete: Boolean,
   rate: Number,
   cost: String,
+  driverLoc: {
+    address: String,
+    latitude: Number,
+    longitude: Number 
+  },
   pickup: {
     address: String,
     latitude: Number,

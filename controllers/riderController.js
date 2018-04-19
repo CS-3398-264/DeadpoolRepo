@@ -1,5 +1,5 @@
 const { riderModel, driverModel, tripModel } = require('../models');
-const { getRating, calculateRate, computeMileage, distanceMatrixRequest, newDirectionRequest, buildSteps } = require('../utils/tools');
+const { getRating, calculateRate, computeMileage, distanceMatrixRequest, newDirectionRequest, buildSteps, simulateTrip } = require('../utils/tools');
 const auth = require('basic-auth');
 
 exports = module.exports = {};
@@ -147,82 +147,37 @@ exports.requestPickup = async (req, res) => {
     const dirData = await newDirectionRequest(
       requestedDriver.location, req.rider.location, req.body.dropoff
     );
-    /*
-    const pickupSteps = dirData.routes[0].legs[0].steps.map(step => {
-      return {
-        distance: {
-          text: step.distance.text,
-          inMeters: step.distance.value
-        },
-        duration: {
-          text: step.duration.text,
-          inSeconds: step.duration.value
-        },
-        endLocation: {
-          latitude: step.end_location.lat,
-          longitude: step.end_location.lng
-        },
-        maneuver: step.maneuver,
-        html: step.html_instructions
-      }
-    });
-    */
-    //console.log(newAPItest.routes[0].legs);
-    /*
-    const tripData = await distanceMatrixRequest(
-      [req.rider.location, requestedDriver.location], 
-      [req.body.dropoff, req.rider.location]
-    );
-    */
     const currentRate = calculateRate(new Date(Date.now()).getHours());
-    //const mileage = computeMileage(tripData.rows[0].elements[0].distance.text);
     const mileage = computeMileage(dirData.routes[0].legs[1].distance.text);
-    /*
     const tripRequest = new tripModel({
       riderID: req.rider._id,
       driverID: requestedDriver._id,
       isComplete: false,
       rate: currentRate,
       cost: `$${(currentRate * mileage).toFixed(2)}`,
+      driverLoc: {
+        address: dirData.routes[0].legs[0].start_address,
+        latitude: requestedDriver.location.latitude,
+        longitude: requestedDriver.location.longitude
+      },
       pickup: {
-        address: tripData.origin_addresses[0],
+        address: dirData.routes[0].legs[0].end_address,
         latitude: req.rider.location.latitude,
         longitude: req.rider.location.longitude
       },
       dropoff: {
-        address: tripData.destination_addresses[0],
+        address: dirData.routes[0].legs[1].end_address,
         latitude: req.body.dropoff.latitude,
         longitude: req.body.dropoff.longitude
       },
-      distance: tripData.rows[0].elements[0].distance.text,
-      travelTime: tripData.rows[0].elements[0].duration.text,
-      timeToPickup: tripData.rows[1].elements[1].duration.text
+      distance: dirData.routes[0].legs[1].distance.text,
+      travelTime: dirData.routes[0].legs[1].duration.text,
+      timeToPickup: dirData.routes[0].legs[0].duration.text,
+      directions: {
+        toPickup: buildSteps(dirData.routes[0].legs[0].steps),
+        toDropoff: buildSteps(dirData.routes[0].legs[1].steps)
+      }
     });
-    */
-   const tripRequest = new tripModel({
-    riderID: req.rider._id,
-    driverID: requestedDriver._id,
-    isComplete: false,
-    rate: currentRate,
-    cost: `$${(currentRate * mileage).toFixed(2)}`,
-    pickup: {
-      address: dirData.routes[0].legs[0].end_address,
-      latitude: req.rider.location.latitude,
-      longitude: req.rider.location.longitude
-    },
-    dropoff: {
-      address: dirData.routes[0].legs[1].end_address,
-      latitude: req.body.dropoff.latitude,
-      longitude: req.body.dropoff.longitude
-    },
-    distance: dirData.routes[0].legs[1].distance.text,
-    travelTime: dirData.routes[0].legs[1].duration.text,
-    timeToPickup: dirData.routes[0].legs[0].duration.text,
-    directions: {
-      toPickup: buildSteps(dirData.routes[0].legs[0].steps),
-      toDropoff: buildSteps(dirData.routes[0].legs[1].steps)
-    }
-  });
     const tripDoc = await tripRequest.save();
     const updatedDriver = await driverModel.findByIdAndUpdate(
       req.body.driverID,
@@ -232,7 +187,7 @@ exports.requestPickup = async (req, res) => {
       } }, 
       { new: true }
     );
-    //simulateTrip()
+    simulateTrip(tripDoc);
     res.send(tripDoc);
   } catch (e) {
     console.error(e.message || e);

@@ -1,4 +1,4 @@
-const { driverModel } = require('../models');
+const { driverModel, tripModel, riderModel } = require('../models');
 require('dotenv').config();
 
 exports = module.exports = {};
@@ -41,32 +41,20 @@ exports.computeMileage = distance => {
 
 exports.simulateTrip = async tripRequest => {
   console.log('simulating trip. bleep bloop.');
-  let delayMS = 0;
-  const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=Austin&destination=30.229246,-97.725819${DM_KEY}`;
-  const tripData = await getContent(dirReq);
-  tripData.routes[0].legs[0].steps.forEach((step, i) => {
-    delayMS += (2500 * i) + (step.duration.value * 100); // this can be adjusted... just an estimate
-    setTimeout(async () => {
-      console.log(`step ${i}: taking ${step.duration.value}ms to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
-      // make an update to drivers position here
-      try {
-        const updatedDriver = await driverModel.findByIdAndUpdate(
-          "5abdd27a734d1d0cf303e71f", 
-          { $set: { location: {
-              latitude: step.end_location.lat,
-              longitude: step.end_location.lng
-          } } }, { new: true }
-        );
-        //console.log(updatedDriver); // should probably just return 200 status for 'idempotency'
-      } catch (e) {
-        console.error(e.messge || e);
-      }
-      // end
-      if (i == tripData.routes[0].legs[0].steps.length-1)
-        console.log('conditional last step');
-        // here we can flip availability back for the driver
-    }, delayMS);
-  });
+  simulatePickup(tripRequest.driverID, 
+    `${tripRequest.driverLoc.latitude},${tripRequest.driverLoc.longitude}`, 
+    `${tripRequest.pickup.latitude},${tripRequest.pickup.longitude}`)
+    .then(() =>
+      simulateDropoff(tripRequest.driverID, tripRequest.riderID,
+        `${tripRequest.pickup.latitude},${tripRequest.pickup.longitude}`, 
+        `${tripRequest.dropoff.latitude},${tripRequest.dropoff.longitude}`)
+    )
+    .then(() =>
+       completeTrip(tripRequest)
+    )
+    .catch(e => {
+      console.error(e.message || e);
+    });
 }
 
 exports.distanceMatrixRequest = (origin, destination) => {
@@ -93,7 +81,7 @@ exports.distanceMatrixRequest = (origin, destination) => {
   return getContent(requestString);
 }
 
-exports.driverTripSimulation = (driverID, startLocation, endLocation, tripType) => {
+const tripSimulation = (driverID, startLocation, endLocation, tripType, riderID) => {
   return new Promise(async (resolve, reject) => {
     try {
       if (tripType === 'pickup') {
@@ -111,7 +99,7 @@ exports.driverTripSimulation = (driverID, startLocation, endLocation, tripType) 
       tripData.routes[0].legs[0].steps.forEach((step, i) => {
         delayMS += (200 * i) + (step.duration.value * 10); // this can be adjusted... just an estimate
         setTimeout(async () => {
-          console.log(`step ${i}: taking ${step.duration.value}ms to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
+          console.log(`step ${i}: taking ${step.duration.value}s to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
           // make an update to drivers position here
           const updatedDriver = await driverModel.findByIdAndUpdate(
             driverID, 
@@ -122,6 +110,18 @@ exports.driverTripSimulation = (driverID, startLocation, endLocation, tripType) 
               } 
             } }, { new: true }
           );
+          // if rider present, update them too
+          if (riderID) {
+            const updatedRider = await riderModel.findByIdAndUpdate(
+              riderID,
+              { $set: { 
+                location: {
+                  latitude: step.end_location.lat,
+                  longitude: step.end_location.lng
+                } 
+              } }, { new: true }
+            );
+          }
           if (i == tripData.routes[0].legs[0].steps.length-1) {
             // if this is a rider dropoff, go back on available
             if (tripType === 'dropoff') {
@@ -145,10 +145,10 @@ exports.driverTripSimulation = (driverID, startLocation, endLocation, tripType) 
 
 exports.newDirectionRequest = (driverLocation, pickupLocation, dropoffLocation) => {
   const dirReq = `https://maps.googleapis.com/maps/api/directions/json?origin=` +
-                 `${driverLocation.latitude},${driverLocation.longitude}` +
-                 `&destination=${dropoffLocation.latitude},${dropoffLocation.longitude}` + 
-                 `&waypoints=optimize:true|${pickupLocation.latitude},${pickupLocation.longitude}` + 
-                 `&key=${DIR_KEY}`;
+    `${driverLocation.latitude},${driverLocation.longitude}` +
+    `&destination=${dropoffLocation.latitude},${dropoffLocation.longitude}` + 
+    `&waypoints=optimize:true|${pickupLocation.latitude},${pickupLocation.longitude}` + 
+    `&key=${DIR_KEY}`;
   return getContent(dirReq);
 }
 
@@ -171,4 +171,15 @@ exports.buildSteps = stepContent => {
       "html": step.html_instructions || bull
     }
   });
+}
+
+const simulatePickup = (driverID, startLocation, endLocation) => tripSimulation(driverID, startLocation, endLocation, 'pickup')
+const simulateDropoff = (driverID, riderID, startLocation, endLocation) => tripSimulation(driverID, startLocation, endLocation, 'dropoff', riderID)
+
+const completeTrip = tripRequest => {
+  console.log(`completed trip: ${tripRequest._id}`);
+  return tripModel.findByIdAndUpdate(
+    tripRequest._id, 
+    { $set: { isComplete: true } }, { new: true }
+  )
 }
