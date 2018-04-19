@@ -9,10 +9,12 @@ exports = module.exports = {};
 
 exports.riderID = async (req, res, next, riderID) => {
   try {
-    const riderDoc = await riderModel.findOne({ _id : riderID });
+    const riderDoc = await riderModel.findById(riderID);
     req.rider = riderDoc;  
+    if (!riderDoc) throw 'Error: rider not found.'
   } catch (e) {
     req.rider = null;
+    console.error(e.message || e);
   }
   return next();
 }
@@ -148,7 +150,7 @@ exports.rateDriver = async (req, res) => {
 
 exports.requestPickup = async (req, res) => {
   try {
-    const requestedDriver = await driverModel.findOne({ _id : req.body.driverID });
+    const requestedDriver = await driverModel.findById(req.body.driverID);
     if (!req.rider.location.latitude || !req.rider.location.longitude)
       throw 'Error: Current location not set.';
     else if (!req.body.dropoff.latitude || !req.body.dropoff.longitude)

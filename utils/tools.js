@@ -64,7 +64,7 @@ exports.distanceMatrixRequest = (origin, destination) => {
   if (Array.isArray(origin)) {
     reqOrigin = `${origin[0].latitude},${origin[0].longitude}`;
     for (i = 1; i < origin.length; i++) {
-      reqOrigin += `|${origin[1].latitude},${origin[1].longitude}`;
+      reqOrigin += `|${origin[i].latitude},${origin[i].longitude}`;
     }
   } else {
     reqOrigin = `${origin.latitude},${origin.longitude}`;
@@ -72,7 +72,7 @@ exports.distanceMatrixRequest = (origin, destination) => {
   if (Array.isArray(destination)) {
     reqDest = `&destinations=${destination[0].latitude},${destination[0].longitude}`;
     for (i=1; i < destination.length; i++) {
-      reqDest += `|${destination[1].latitude},${destination[1].longitude}`;
+      reqDest += `|${destination[i].latitude},${destination[i].longitude}`;
     }
   } else {
     reqDest = `&destinations=${destination.latitude},${destination.longitude}`;
