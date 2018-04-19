@@ -22,7 +22,7 @@ const getContent = url => {
 }
 
 exports.getRating = userObj => 
-  ((userObj.reviews.reduce((a, b) => a + b, 0) / userObj.reviews.length) || 0).toFixed(2);
+  ((userObj.reviews.map(review => review.score).reduce((a, b) => a + b, 0) / userObj.reviews.length) || 0).toFixed(2);
 
 exports.calculateRate = currentTime => {
   if (currentTime > 16)
@@ -99,7 +99,9 @@ const tripSimulation = (driverID, startLocation, endLocation, tripType, riderID)
       tripData.routes[0].legs[0].steps.forEach((step, i) => {
         delayMS += (200 * i) + (step.duration.value * 10); // this can be adjusted... just an estimate
         setTimeout(async () => {
-          console.log(`step ${i}: taking ${step.duration.value}s to travel ${step.distance.text} and arrive at ${step.end_location.lat},${step.end_location.lng}.`);  
+          console.log(`${tripType} step ${i}: took ${step.duration.value}s ` +
+            `to travel ${step.distance.text} and arrive at `+ 
+            `${step.end_location.lat},${step.end_location.lng}.`);  
           // make an update to drivers position here
           const updatedDriver = await driverModel.findByIdAndUpdate(
             driverID, 
@@ -176,10 +178,18 @@ exports.buildSteps = stepContent => {
 const simulatePickup = (driverID, startLocation, endLocation) => tripSimulation(driverID, startLocation, endLocation, 'pickup')
 const simulateDropoff = (driverID, riderID, startLocation, endLocation) => tripSimulation(driverID, startLocation, endLocation, 'dropoff', riderID)
 
-const completeTrip = tripRequest => {
+const completeTrip = async tripRequest => {
   console.log(`completed trip: ${tripRequest._id}`);
-  return tripModel.findByIdAndUpdate(
-    tripRequest._id, 
-    { $set: { isComplete: true } }, { new: true }
-  )
+  try {
+    await driverModel.findByIdAndUpdate(
+      tripRequest.driverID,
+      { $set: { currentTrip: "none" } }
+    );
+    return tripModel.findByIdAndUpdate(
+      tripRequest._id, 
+      { $set: { isComplete: true } }
+    )
+  } catch (e) {
+    console.log(e.message || e);
+  }
 }

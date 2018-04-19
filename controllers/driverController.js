@@ -1,4 +1,4 @@
-const { driverModel, riderModel } = require('../models');
+const { driverModel, riderModel, tripModel } = require('../models');
 const { getRating } = require('../utils/tools');
 const auth = require('basic-auth');
 
@@ -78,17 +78,34 @@ exports.setDriverLocation = async (req, res) => {
 }
 
 exports.rateRider = async (req, res) => {
-  if (req.driver) {
-    try {
-      const updatedRider = await riderModel.findByIdAndUpdate(
-        req.body.riderID, 
-        { $push: { reviews: parseFloat(req.body.rating).toFixed(2) } }, 
-        { new: true });
-      res.send(updatedRider); // should probably just return 200 for 'idempotency'
-    } catch (e) {
-      res.sendStatus(400);
-    }
+  try {
+    if (!req.driver)
+      throw 'Error: Invalid driverID.';
+    const validTrip = await tripModel.findById(req.body.tripID);
+    if (!validTrip)
+      throw 'Error: Invalid trip.';
+    else if (!validTrip.isComplete)
+      throw 'Error: Trip incomplete.';
+    const existingRating = await riderModel.findOne({"reviews.tripID" : req.body.tripID});
+    if (existingRating)
+      throw 'Error: Rating already submitted for this trip.';
+    const updatedRider = await riderModel.findByIdAndUpdate(
+      req.body.riderID, 
+      { $push: { 
+          reviews: {
+            tripID: req.body.tripID,
+            score: parseFloat(req.body.score).toFixed(2)
+          } 
+        } 
+      }, 
+      { new: true }
+    );
+    res.send(updatedRider);
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(400);
   }
+
 }
 
 /* ADMIN AUTH REQUIRED */
@@ -108,7 +125,7 @@ exports.addDriver = async (req, res) => {
           longitude: null 
         },
         reviews: [],
-        currentTrip: null
+        currentTrip: 'none'
       });
       const newDoc = await newDriver.save();
       console.log('saved new driver "%s" to db. id: %s', newDoc.name, newDoc._id);

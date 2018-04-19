@@ -54,8 +54,6 @@ exports.getPotentialDrivers = async (req, res) => {
           timeToPickup : String(distanceData.rows[index].elements[0].duration.text)
         };
     });
-    // there could be an issue here with drivers that are so close their distance is measured in feet
-    // instead of miles... (implement the calculateMileage util function)
     driverDocs = newDriverDocs.filter(driver => parseFloat(computeMileage(driver.distance)) <= maxDistance);
     res.send(driverDocs);
   } catch (e) {
@@ -97,6 +95,7 @@ exports.getRiderRating = (req, res) => {
     res.json(getRating(req.rider));
   else 
     res.sendStatus(404);
+  console.log(req.rider.reviews);
 }
 
 exports.setRiderLocation = async (req, res) => {
@@ -121,9 +120,23 @@ exports.rateDriver = async (req, res) => {
   try {
     if (!req.rider)
       throw 'Error: Invalid riderID.';
+    const validTrip = await tripModel.findById(req.body.tripID);
+    if (!validTrip)
+      throw 'Error: Invalid trip.';
+    else if (!validTrip.isComplete)
+      throw 'Error: Trip incomplete.';
+    const existingRating = await driverModel.findOne({"reviews.tripID" : req.body.tripID});
+    if (existingRating)
+      throw 'Error: Rating already submitted for this trip.';
     const updatedDriver = await driverModel.findByIdAndUpdate(
       req.body.driverID, 
-      { $push: { reviews: parseFloat(req.body.rating).toFixed(2) } }, 
+      { $push: { 
+          reviews: {
+            tripID: req.body.tripID,
+            score: parseFloat(req.body.score).toFixed(2)
+          } 
+        } 
+      }, 
       { new: true }
     );
     res.send(updatedDriver);
