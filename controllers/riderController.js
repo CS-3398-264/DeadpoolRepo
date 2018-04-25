@@ -23,7 +23,7 @@ exports.getRiderByID = (req, res) => {
   if (req.rider) 
     res.send(req.rider);
   else 
-    res.sendStatus(404);
+    res.sendStatus(404); // Should only occur if ID sent is not in DB.
 }
 
 exports.getAllRiders = async (req, res) => {
@@ -31,7 +31,7 @@ exports.getAllRiders = async (req, res) => {
     const riderDocs = await riderModel.find();
     res.send(riderDocs);
   } catch (e) {
-    res.sendStatus(400); // should be different error code?
+    res.sendStatus(500); // Should only error if there is a DB issue.
   }
 }
 
@@ -59,8 +59,13 @@ exports.getPotentialDrivers = async (req, res) => {
     driverDocs = newDriverDocs.filter(driver => parseFloat(computeMileage(driver.distance)) <= maxDistance);
     res.send(driverDocs);
   } catch (e) {
-    console.error(e.message || e);
-    res.sendStatus(400); // should be different error code?
+    if(e.message === 'Error: Rider does not have location set.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Pre-condition not met, rider does not have location set.
+    } else {
+      console.error(e.message || e);
+      res.sendStatus(500); // Other error, server related.
+    }
   }
 }
 
@@ -87,8 +92,16 @@ exports.getTripEstimate = async (req, res) => {
     };
     res.send(tripEstimate);
   } catch (e) {
-    console.error(e.message || e);
-    res.sendStatus(400); // should be different error code?
+    if(e.message === 'Error: Rider does not have location set.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, rider does not have location set.
+    } else if(e.message === 'Error: Rider does not have location set.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, rider does not have location set.
+    } else {
+      console.error(e.message || e);
+      res.sendStatus(500); // Other error, server related.
+    }
   }
 }
 
@@ -114,7 +127,7 @@ exports.setRiderLocation = async (req, res) => {
     res.send(updatedRider); // should probably just return 200 status for 'idempotency'
   } catch (e) {
     console.error(e.message || e);
-    res.sendStatus(400);
+    res.sendStatus(400); // Bad request, invalid information.
   }
 }
 
@@ -143,8 +156,13 @@ exports.rateDriver = async (req, res) => {
     );
     res.send(updatedDriver);
   } catch (e) {
-    console.error(e.message || e);
-    res.sendStatus(400);
+    if(e.message === 'Error: Invalid riderID.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, no ID provided.
+    } else {
+      console.error(e.message || e);
+      res.sendStatus(500); // Other server issue.
+    }
   }
 }
 
@@ -205,45 +223,60 @@ exports.requestPickup = async (req, res) => {
     simulateTrip(tripDoc);
     res.send(tripDoc);
   } catch (e) {
-    console.error(e.message || e);
-    res.sendStatus(400);
+    if(e.message === 'Error: Current location not set.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, current location not provided.
+    } else if(e.message === 'Error: Destination coordinates incomplete..') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, destination not provided.
+    } else if(e.message === 'Error: Selected driver is unavailable.') {
+      console.error(e.message || e);
+      res.sendStatus(404); // Driver requested 'not found'.
+    } else {
+      console.error(e.message || e);
+      res.sendStatus(500); // Other server issue.
+    }
   }
 }
 
 exports.addRider = async (req, res) => {
-  if (req.body.name) { // refactor these conditional style checks to use 'throw' instead
-    try {
-      const newRider = new riderModel({
-        name: req.body.name,
+  try {
+    if (!req.body.name)
+      throw 'Error: Name not set.';
+    const newRider = new riderModel({
+      name: req.body.name,
         location: {
-          latitude: null,
-          longitude: null 
-        },
-        reviews: []
-      });
-      const newDoc = await newRider.save();
-      console.log('saved new Rider "%s" to db. id: %s', newDoc.name, newDoc._id);
-      res.sendStatus(200);
-    } catch (e) {
-      res.sendStatus(400);
+        latitude: null,
+        longitude: null
+      },
+      reviews: []
+    });
+    const newDoc = await newRider.save();
+    console.log('saved new Rider "%s" to db. id: %s', newDoc.name, newDoc._id);
+    res.sendStatus(200);
+  } catch (e) {
+    if(e.message === 'Error: Name not set.') {
+      console.error(e.message || e);
+      res.sendStatus(422); // Bad request, name not provided.
+    } else {
+      console.error(e.message || e);
+      res.sendStatus(500); // Other server error.
     }
-  } else {
-    res.sendStatus(400);
-  } 
+  }
 }
 
 /* ADMIN AUTH REQUIRED */
 
 exports.removeRider = async (req, res) => {
   const credentials = auth(req);
-  if (credentials && credentials.name == 'admin' && credentials.pass == 'password') {
-    try {
-      const rider = await riderModel.remove({ _id : req.rider._id });
-      res.sendStatus(200);
-    } catch (e) {
-      res.sendStatus(404);
-    }
-  } else {
-    res.sendStatus(401);
+  try {
+    if (!credentials)
+      throw 'Error: Missing Credentials.';
+    else if (credentials.name !== 'admin' || credentials.pass !== 'password')
+      throw 'Error: Invalid Credentials.';
+    const rider = await riderModel.remove({ _id : req.rider._id });
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(404);
   }
 }
