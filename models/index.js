@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 exports = module.exports = {};
 
 /* OBJECT SCHEMAS */
+const reviewSchema = mongoose.Schema({
+  tripID: String,
+  score: Number
+}, { _id : false });
+
 const driverSchema = mongoose.Schema({
   name: String,
   vehicle: String,
@@ -12,7 +17,7 @@ const driverSchema = mongoose.Schema({
     latitude: Number,
     longitude: Number 
   },
-  reviews: [Number],
+  reviews: [reviewSchema],
   currentTrip: String
 }, { collection : 'drivers' });
 
@@ -22,13 +27,18 @@ const riderSchema = mongoose.Schema({
     latitude: Number,
     longitude: Number 
   },
-  reviews: [Number]
+  reviews: [reviewSchema]
 }, { collection : 'riders' });
 
 const tripSchema = mongoose.Schema({
   isComplete: Boolean,
   rate: Number,
   cost: String,
+  driverLoc: {
+    address: String,
+    latitude: Number,
+    longitude: Number 
+  },
   pickup: {
     address: String,
     latitude: Number,
@@ -43,7 +53,11 @@ const tripSchema = mongoose.Schema({
   riderID: String,
   distance: String,
   travelTime: String,
-  timeToPickup: String
+  timeToPickup: String,
+  directions: {
+    toPickup: Object,
+    toDropoff: Object
+  }
 }, { collection : 'trips' });
 
 /* ORM Models */

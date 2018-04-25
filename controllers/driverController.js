@@ -1,4 +1,4 @@
-const { driverModel, riderModel } = require('../models');
+const { driverModel, riderModel, tripModel } = require('../models');
 const { getRating } = require('../utils/tools');
 const auth = require('basic-auth');
 
@@ -85,7 +85,15 @@ exports.setDriverLocation = async (req, res) => {
 exports.rateRider = async (req, res) => {
   try {
     if (!req.driver)
-      throw 'Error: Missing driver.';
+      throw 'Error: Invalid driverID.';
+    const validTrip = await tripModel.findById(req.body.tripID);
+    if (!validTrip)
+      throw 'Error: Invalid trip.';
+    else if (!validTrip.isComplete)
+      throw 'Error: Trip incomplete.';
+    const existingRating = await riderModel.findOne({"reviews.tripID" : req.body.tripID});
+    if (existingRating)
+      throw 'Error: Rating already submitted for this trip.';
     const updatedRider = await riderModel.findByIdAndUpdate(
       req.body.riderID,
       { $push: { reviews: parseFloat(req.body.rating).toFixed(2) } },
@@ -100,6 +108,7 @@ exports.rateRider = async (req, res) => {
       res.sendStatus(500); // Other error, server related.
     }
   }
+
 }
 
 /* ADMIN AUTH REQUIRED */
@@ -123,7 +132,7 @@ exports.addDriver = async (req, res) => {
           longitude: null
         },
         reviews: [],
-        currentTrip: null
+        currentTrip: 'none'
       });
       const newDoc = await newDriver.save();
       console.log('saved new driver "%s" to db. id: %s', newDoc.name, newDoc._id);
