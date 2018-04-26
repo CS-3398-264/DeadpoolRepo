@@ -41,6 +41,7 @@ router.param('riderID', riderID);
 router.get('/driver', getAllDrivers);
 router.get('/driver/:driverID', getDriverByID);
 router.get('/driver/:driverID/rating', getDriverRating);
+//router.get('/driver/:driverID/directions', getCurrentDirections);
 router.put('/driver/:driverID/available', setAvailability);
 router.put('/driver/:driverID/location', setDriverLocation);
 router.post('/driver/:driverID/rateRider', rateRider);
@@ -61,12 +62,7 @@ router.delete('/rider/:riderID', removeRider);
 
 /* Trip Routes */
 router.get('/trip/currentRate', getCurrentRate);
-router.post('/trip/simulation', tripSimulation);
-// these are just ideas for future trip functions
 // router.get('trip/:tripID', getTripByID);
-// router.get('trip/:tripID/status', getTripStatus); <- completed vs. not-completed
-// router.put('trip/:tripID/status', updateTripStatus); <- update status of trip
-// router.post('/trip/getEstimate', getTripEstimate);
 
 /* catch incorrect routes */
 router.use('/', (req, res) => res.sendStatus(404));

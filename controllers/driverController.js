@@ -46,6 +46,13 @@ exports.getDriverRating = (req, res) => {
     res.sendStatus(404);
 }
 
+/* PUT THE CURRENT DIRECTIONS FUNCTION HERE */
+exports.getCurrentDirections = async (req, res) => {
+  // test req.driver for current trip
+  // if found, look up the trip
+  // parse the trip doc for directions, and return those as JSON
+}
+
 exports.setAvailability = async (req, res) => {
   try {
     const updatedDriver = await driverModel.findByIdAndUpdate(

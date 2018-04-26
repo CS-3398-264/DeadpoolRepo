@@ -7,14 +7,23 @@ exports.getCurrentRate = (req, res) => {
   res.json(calculateRate(new Date(Date.now()).getHours()));
 }
 
-exports.tripSimulation = (req, res) => {
+// this can serve as an outline for the getTripByID route.. should it be admin-only?
+
+/*
+exports.driverID = async (req, res, next, driverID) => {
   try {
-    let delay, count = 0;
-    res.sendStatus(200);
-    const pickup = driverTripSimulation('5abdd27a734d1d0cf303e71f', 'Austin', '30.229246,-97.725819', 'pickup').then(()=> {
-      const dropoff = driverTripSimulation('5abdd27a734d1d0cf303e71f', '30.229246,-97.725819', 'Austin', 'dropoff');
-    });
+    const driverDoc = await driverModel.findOne({ _id : driverID });
+    req.driver = driverDoc;
   } catch (e) {
-    console.error(e.message || e);
+    req.driver = null;
   }
+  return next();
 }
+
+exports.getDriverByID = (req, res) => {
+  if (req.driver)
+    res.send(req.driver);
+  else
+    res.sendStatus(404);
+}
+*/
