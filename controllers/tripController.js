@@ -3,27 +3,24 @@ const { calculateRate, simulateTrip, driverTripSimulation } = require('../utils/
 
 exports = module.exports = {};
 
+exports.tripID = async (req, res, next, tripID) => {
+  try {
+    const tripDoc = await tripModel.findOne({ _id : tripID });
+    req.trip = tripDoc;
+  } catch (e) {
+    req.trip = null;
+  }
+  return next();
+}
+
 exports.getCurrentRate = (req, res) => {
   res.json(calculateRate(new Date(Date.now()).getHours()));
 }
 
 // this can serve as an outline for the getTripByID route.. should it be admin-only?
-
-/*
-exports.driverID = async (req, res, next, driverID) => {
-  try {
-    const driverDoc = await driverModel.findOne({ _id : driverID });
-    req.driver = driverDoc;
-  } catch (e) {
-    req.driver = null;
-  }
-  return next();
-}
-
-exports.getDriverByID = (req, res) => {
-  if (req.driver)
-    res.send(req.driver);
+exports.getTripByID = (req, res) => {
+  if (req.trip)
+    res.send(req.trip);
   else
     res.sendStatus(404);
 }
-*/

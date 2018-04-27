@@ -48,9 +48,24 @@ exports.getDriverRating = (req, res) => {
 
 /* PUT THE CURRENT DIRECTIONS FUNCTION HERE */
 exports.getCurrentDirections = async (req, res) => {
-  // test req.driver for current trip
-  // if found, look up the trip
-  // parse the trip doc for directions, and return those as JSON
+  try {
+    if (req.driver.currentTrip && req.driver.currentTrip !== 'none') {
+      const currentTrip = await tripModel.findOne({ _id : req.driver.currentTrip });
+      const directions = {
+        tripID: currentTrip._id,
+        directions: {
+          toPickup: currentTrip.directions.toPickup,
+          toDropoff: currentTrip.directions.toDropoff
+        }
+      }
+      res.send(directions)
+    } else {
+      throw Error('driver not currently assigned to a trip')
+    }
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(404);
+  }
 }
 
 exports.setAvailability = async (req, res) => {

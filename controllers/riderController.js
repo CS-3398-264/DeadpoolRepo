@@ -175,8 +175,7 @@ exports.requestPickup = async (req, res) => {
       throw 'Error: Destination coordinates incomplete.'
     else if (!requestedDriver.available) 
       throw 'Error: Selected driver is unavailable.';
-    
-    // testing out a different API to get all the trip data at once w/ directions
+  
     const dirData = await newDirectionRequest(
       requestedDriver.location, req.rider.location, req.body.dropoff
     );

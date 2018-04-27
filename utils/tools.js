@@ -97,7 +97,7 @@ const tripSimulation = (driverID, startLocation, endLocation, tripType, riderID)
       //console.log(tripData.routes[0].legs);
       // start iterating through the steps in the directions
       tripData.routes[0].legs[0].steps.forEach((step, i) => {
-        delayMS += (200 * i) + (step.duration.value * 10); // this can be adjusted... just an estimate
+        delayMS += (200 * i) + (step.duration.value * 250); // this can be adjusted... just an estimate
         setTimeout(async () => {
           console.log(`${tripType} step ${i}: took ${step.duration.value}s ` +
             `to travel ${step.distance.text} and arrive at `+ 
