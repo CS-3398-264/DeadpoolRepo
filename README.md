@@ -11,6 +11,11 @@ Run `npm install` and 'npm start' for a dev server. Navigate to `http://localhos
 
 # Available Routes:
 
+* all these routes have the prefix `/api/` before them
+* admin auth: 
+  * 'name': 'admin' 
+  * 'password': 'password'
+
 ## Driver Routes
 ### `get('/driver', getAllDrivers)`
 * returns a list of all drivers
