@@ -28,7 +28,7 @@ Run `npm install` and 'npm start' for a dev server. Navigate to `http://localhos
   * takes { "available" : _true_ or _false_ } in request body
 ### `put('/driver/:driverID/location', setDriverLocation)`
 * manually set a driver's location.
-  * takes { "available" : _true_ or _false_ } in request body
+  * takes _latitude_ and _longitude_ in request body
 ### `post('/driver/:driverID/rateRider', rateRider)`
 * driver can rate a rider that has a taken a trip with them
   * takes _tripID_, _riderID_, and a decimal _rating_ from 1.0 to 5.0.
