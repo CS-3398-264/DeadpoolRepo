@@ -35,7 +35,7 @@ exports.getAllDrivers = async (req, res) => {
     }
     res.send(driverDocs);
   } catch (e) {
-    res.sendStatus(404); // When will this fail?
+    res.sendStatus(404);
   }
 }
 
@@ -44,6 +44,28 @@ exports.getDriverRating = (req, res) => {
     res.json(getRating(req.driver));
   else
     res.sendStatus(404);
+}
+
+/* PUT THE CURRENT DIRECTIONS FUNCTION HERE */
+exports.getCurrentDirections = async (req, res) => {
+  try {
+    if (req.driver.currentTrip && req.driver.currentTrip !== 'none') {
+      const currentTrip = await tripModel.findOne({ _id : req.driver.currentTrip });
+      const directions = {
+        tripID: currentTrip._id,
+        directions: {
+          toPickup: currentTrip.directions.toPickup,
+          toDropoff: currentTrip.directions.toDropoff
+        }
+      }
+      res.send(directions)
+    } else {
+      throw Error('driver not currently assigned to a trip')
+    }
+  } catch (e) {
+    console.error(e.message || e);
+    res.sendStatus(404);
+  }
 }
 
 exports.setAvailability = async (req, res) => {
@@ -70,7 +92,7 @@ exports.setDriverLocation = async (req, res) => {
           longitude: req.body.longitude
       } } }, { new: true }
     );
-    res.send(updatedDriver); // should probably just return 200 status for 'idempotency'
+    res.send(updatedDriver);
   } catch (e) {
     if(e.message === 'Error: Incomplete parameters.') {
       console.error(e.message || e);
@@ -136,7 +158,7 @@ exports.addDriver = async (req, res) => {
       });
       const newDoc = await newDriver.save();
       console.log('saved new driver "%s" to db. id: %s', newDoc.name, newDoc._id);
-      res.sendStatus(200);
+      res.send(newDoc);
     } catch(e) {
       if(e.message === 'Error: Missing Credentials.') {
         console.error(e.message || e);

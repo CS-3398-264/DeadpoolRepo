@@ -124,7 +124,7 @@ exports.setRiderLocation = async (req, res) => {
           longitude: req.body.longitude 
       } } }, { new: true }
     );
-    res.send(updatedRider); // should probably just return 200 status for 'idempotency'
+    res.send(updatedRider);
   } catch (e) {
     console.error(e.message || e);
     res.sendStatus(400); // Bad request, invalid information.
@@ -175,8 +175,7 @@ exports.requestPickup = async (req, res) => {
       throw 'Error: Destination coordinates incomplete.'
     else if (!requestedDriver.available) 
       throw 'Error: Selected driver is unavailable.';
-    
-    // testing out a different API to get all the trip data at once w/ directions
+  
     const dirData = await newDirectionRequest(
       requestedDriver.location, req.rider.location, req.body.dropoff
     );
@@ -253,7 +252,7 @@ exports.addRider = async (req, res) => {
     });
     const newDoc = await newRider.save();
     console.log('saved new Rider "%s" to db. id: %s', newDoc.name, newDoc._id);
-    res.sendStatus(200);
+    res.send(newDoc);
   } catch (e) {
     if(e.message === 'Error: Name not set.') {
       console.error(e.message || e);
